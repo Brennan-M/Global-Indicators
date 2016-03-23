@@ -29,23 +29,34 @@
 
 		    map.legend();
 		    
+		    var i = 0;
+		    function timerLoop() {
+		    	setTimeout(function () {
+				    
+					var year = Object.keys(min_max_data)[i];
+					var ccodes = Object.keys(min_max_data[year]);
 
-		    for (var i = 0; i < Object.keys(min_max_data).length; i++) {
-		    	
-				var year = Object.keys(min_max_data)[i];
-				var ccodes = Object.keys(min_max_data[year]);
+					document.getElementById("year").innerHTML = year;
+					for (var j = 0; j < ccodes.length; j++) {
 
-				document.getElementById("year").innerHTML = year;
-				for (var j = 0; j < ccodes.length; j++) {
+						ccode = ccodes[j];
+						value = min_max_data[year][ccode];
+						// console.log(year, ccode, value);
+						var country = {}
+						country[ccode] = {fillColor:paletteScale(value), numberOfThings:value}
+						map.updateChoropleth(country);
+					}
 
-					ccode = ccodes[j];
-					value = min_max_data[year][ccode];
-					// console.log(year, ccode, value);
-					var country = {}
-					country[ccode] = {fillColor:paletteScale(value), numberOfThings:value}
-					map.updateChoropleth(country);
-				}
-		    }
+					i++;
+				    
+				    if (i < Object.keys(min_max_data).length) {
+				    	timerLoop();
+				    }
+
+				}, 500)
+			}
+
+			timerLoop();
 		    
 
 		    //map.updateChoropleth({USA:'#FF0000', IRL:'#00FFFF'});
