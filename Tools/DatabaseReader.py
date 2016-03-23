@@ -27,47 +27,49 @@ class DatabaseReader(object):
 
     """
     Get a particular country's data over a set of years. If you provide a 
-    dateRange make it as a tuple of two integers (e.g. (1960, 1999)). Note
+    date_range make it as a tuple of two integers (e.g. (1960, 1999)). Note
     that this range is inclusive.
 
     Returns a matrix with the data and a dictionary describing what each
     of the columns represents.
     """
-    def fetchCountryData(self, countryName, dateRange = (1960, 2015)):
+    def fetch_country_data(self, country_name, date_range = (1960, 2015)):
         # Figure out how big the matrix needs to be
         query = "SELECT COUNT(DISTINCT IndicatorName)" \
                 + " FROM Indicators" \
-                + " WHERE CountryName = \"" + countryName + "\""
+                + " WHERE CountryName = \"" + country_name + "\"" \
+                + " AND Year >= " + str(date_range[0]) \
+                + " AND Year <= " + str(date_range[1]) 
+
         for c in  self.c.execute(query):
             cols = int(c[0])
-        print cols
 
-        dataMatrix = np.zeros((dateRange[1] - dateRange[0] + 1, cols))
-        colDictionary = {}
+        data_matrix = np.zeros((date_range[1] - dateRange[0] + 1, cols))
+        col_dictionary = {}
         
         # Read data from DB
         query = "SELECT Year, Value, IndicatorName" \
                 + " FROM Indicators" \
-                + " WHERE CountryName = \"" + countryName + "\"" \
-                + " AND Year >= " + str(dateRange[0]) \
-                + " AND Year <= " + str(dateRange[1]) \
+                + " WHERE CountryName = \"" + country_name + "\"" \
+                + " AND Year >= " + str(date_range[0]) \
+                + " AND Year <= " + str(date_range[1]) \
                 + " ORDER BY IndicatorName"
 
         # Fill out matrix and dictionary
-        currCol = 0
-        prevIndicator = ""
+        curr_col = 0
+        prev_indicator = ""
         for row in self.c.execute(query):
-            if row[2] != prevIndicator:
-                colDictionary[currCol] = row[2]
-                currCol += 1
-                prevIndicator = row[2]
-            dataMatrix[(int(row[0]) - dateRange[0]), currCol - 1] = row[1]
+            if row[2] != prev_indicator:
+                col_dictionary[curr_col] = row[2]
+                curr_col += 1
+                prev_indicator = row[2]
+            data_matrix[(int(row[0]) - date_range[0]), curr_col - 1] = row[1]
         
-        return dataMatrix, colDictionary
+        return data_matrix, col_dictionary
 
 if __name__ == '__main__':
     db = DatabaseReader()
-    mat, d = db.fetchCountryData("United States", (2010, 2015))
+    mat, d = db.fetch_country_data("United States", (2010, 2015))
     print mat
     del db
 
