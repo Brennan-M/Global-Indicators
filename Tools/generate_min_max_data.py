@@ -27,10 +27,10 @@ class MinMax:
 			for row in c.execute("SELECT Year, Value FROM Indicators WHERE IndicatorCode=? AND CountryName=?", (self.attributeAnalyzed, country)):
 				countryValues.update({int(row[0]):int(row[1])})
 				# Possibly this could be more efficient, but I am tired
-				#if float(row[1]) < minimum:
-				#	minimum = float(row[1])
-				#if float(row[1]) > maximum:
-				#	maximum = float(row[1])
+				if float(row[1]) < minimum:
+					minimum = float(row[1])
+				if float(row[1]) > maximum:
+					maximum = float(row[1])
 				if int(row[0]) < minYear:
 					minYear = int(row[0])
 				if int(row[0]) > maxYear:
@@ -39,10 +39,10 @@ class MinMax:
 			self.countryInfo.update({self.countryCodes[country]:countryValues})
 
 		# This Code Normalizes the values
-		# for obj in self.countryInfo.values():
-		# 	for year, value in obj.items():
-		# 		normalizedValue = (value - minimum) / (maximum - minimum)
-		# 		obj[year] = normalizedValue
+		for obj in self.countryInfo.values():
+			for year, value in obj.items():
+				normalizedValue = (value - minimum) / (maximum - minimum)
+				obj[year] = normalizedValue
 
 		for year in range(minYear, maxYear+1):
 			newData = {}
@@ -55,11 +55,7 @@ class MinMax:
 
 			self.organizedInfo[year] = newData
 
-		print self.organizedInfo
 
-
-	def fuckYouMonaco(self):
-		print self.countryInfo["MCO"]
 
 # if __name__ == "__main__":
 # 	minmax = MinMax("NY.GDP.PCAP.CD")

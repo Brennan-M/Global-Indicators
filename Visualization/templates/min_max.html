@@ -8,19 +8,22 @@
 		<script src="http://d3js.org/d3.v3.min.js"></script>
 		<script src="http://d3js.org/topojson.v1.min.js"></script>
 		<script src="https://rawgithub.com/markmarkoh/datamaps/master/dist/datamaps.world.js"></script>
+		<h1 align="center" id="year"></h1>
 		<div id="container" style="position: relative; width: 1750px; height: 1050px;"></div>
 
 		<script type="text/javascript">
 			
 			min_max_data = {{ data|safe }};
 
+			var paletteScale = d3.scale.linear()
+					.domain([0, 1])
+					.range(["#EFEFFF", "#02386F"]);
+
 		    var map = new Datamap({
 
 		    	element: document.getElementById('container'),
 		    	fills:{
-		    		MEDIUM: 'blue',
-		    		UNKNOWN: 'rgb(0,0,0)',
-		    		defaultFill: 'green'
+		    		defaultFill: '#F5F5F5'
 		    	}
 			});
 
@@ -32,18 +35,15 @@
 				var year = Object.keys(min_max_data)[i];
 				var ccodes = Object.keys(min_max_data[year]);
 
+				document.getElementById("year").innerHTML = year;
 				for (var j = 0; j < ccodes.length; j++) {
 
 					ccode = ccodes[j];
 					value = min_max_data[year][ccode];
-					console.log(year, ccode, value);
-					map.updateChoropleth({ 
-						ccode: {
-							fillKey : "MEDIUM",
-							numberOfThings: value
-						}
-					});
-
+					// console.log(year, ccode, value);
+					var country = {}
+					country[ccode] = {fillColor:paletteScale(value), numberOfThings:value}
+					map.updateChoropleth(country);
 				}
 		    }
 		    
