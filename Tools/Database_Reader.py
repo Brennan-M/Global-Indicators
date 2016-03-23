@@ -33,7 +33,7 @@ class DatabaseReader(object):
     Returns a matrix with the data and a dictionary describing what each
     of the columns represents.
     """
-    def fetch_country_data(self, country_name, date_range = (1960, 2015)):
+    def fetchCountryData(self, country_name, date_range = (1960, 2015)):
         # Figure out how big the matrix needs to be
         query = "SELECT COUNT(DISTINCT IndicatorName)" \
                 + " FROM Indicators" \
@@ -44,8 +44,8 @@ class DatabaseReader(object):
         for c in  self.c.execute(query):
             cols = int(c[0])
 
-        data_matrix = np.zeros((date_range[1] - dateRange[0] + 1, cols))
-        col_dictionary = {}
+        dataMatrix = np.zeros((date_range[1] - dateRange[0] + 1, cols))
+        colDictionary = {}
         
         # Read data from DB
         query = "SELECT Year, Value, IndicatorName" \
@@ -56,20 +56,20 @@ class DatabaseReader(object):
                 + " ORDER BY IndicatorName"
 
         # Fill out matrix and dictionary
-        curr_col = 0
-        prev_indicator = ""
+        currCol = 0
+        prevIndicator = ""
         for row in self.c.execute(query):
-            if row[2] != prev_indicator:
-                col_dictionary[curr_col] = row[2]
-                curr_col += 1
-                prev_indicator = row[2]
-            data_matrix[(int(row[0]) - date_range[0]), curr_col - 1] = row[1]
+            if row[2] != prevIndicator:
+                colDictionary[currCol] = row[2]
+                currCol += 1
+                prevIndicator = row[2]
+            dataMatrix[(int(row[0]) - date_range[0]), currCol - 1] = row[1]
         
-        return data_matrix, col_dictionary
+        return dataMatrix, colDictionary
 
 if __name__ == '__main__':
     db = DatabaseReader()
-    mat, d = db.fetch_country_data("United States", (2010, 2015))
+    mat, d = db.fetchCountryData("United States", (2010, 2015))
     print mat
     del db
 
