@@ -9,7 +9,7 @@ from generate_min_max_data import MinMax
 
 app = Flask(__name__)
 
-class Visualize:
+class Visualize(object):
 
 	def welcome(self):
 		@app.route("/")
