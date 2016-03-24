@@ -5,7 +5,7 @@ DB_PATH = '../Data/world-development-indicators/database.sqlite'
 
 class MinMax(object):
 
-	def __init__(self, path=DB_PATH, attributeInput):
+	def __init__(self, attributeInput, path=DB_PATH):
 		self.conn = sqlite3.connect(path, check_same_thread = False)
 		self.conn.text_factory = str
 		self.c = self.conn.cursor()
@@ -37,27 +37,32 @@ class MinMax(object):
 				continue
 			self.countryCodes.update({row[1]:row[0]})
 
+
+		for country, ccode in self.countryCodes.items():
+			countryValues = {}
+			for row in self.c.execute("SELECT Year, Value FROM Indicators WHERE IndicatorCode=? AND CountryName=?", (self.attributeAnalyzed, country)):
+				countryValues.update({int(row[0]):float(row[1])})
+
+			self.countryInfo.update({self.countryCodes[country]:countryValues})
+
+
+	def normalizeData(self):
+
 		minimum = float("inf")
 		maximum = float("-inf")
 		minYear = float("inf")
 		maxYear = float("-inf")
 
-		for country, ccode in self.countryCodes.items():
-			countryValues = {}
-			for row in self.c.execute("SELECT Year, Value FROM Indicators WHERE IndicatorCode=? AND CountryName=?", (self.attributeAnalyzed, country)):
-				countryValues.update({int(row[0]):int(row[1])})
-				
-				if float(row[1]) < minimum:
-					minimum = float(row[1])
-				if float(row[1]) > maximum:
-					maximum = float(row[1])
-					maxCountry = country
-				if int(row[0]) < minYear:
-					minYear = int(row[0])
-				if int(row[0]) > maxYear:
-					maxYear = int(row[0]) 
-
-			self.countryInfo.update({self.countryCodes[country]:countryValues})
+		for obj in self.countryInfo.values():
+			for year, value in obj.items():
+				if value < minimum:
+					minimum = value
+				if value > maximum:
+					maximum = value
+				if year < minYear:
+					minYear = year
+				if year > maxYear:
+					maxYear = year 
 
 		# This Code Normalizes the values
 		for obj in self.countryInfo.values():
@@ -76,9 +81,50 @@ class MinMax(object):
 
 			self.organizedInfo[year] = newData
 
+	def normalizeDataByYear(self):
+
+		minYear = float("inf")
+		maxYear = float("-inf")
+		
+		for obj in self.countryInfo.values(): 
+			for year in obj.keys():
+				if year < minYear:
+					minYear = year
+				if year > maxYear:
+					maxYear = year
+		
+		for year in range(minYear, maxYear+1):
+			newData = {}
+			for ccode in self.countryInfo.keys():
+				obj = self.countryInfo[ccode]
+				if obj.has_key(year):
+					newData[ccode] = obj[year]
+				else:
+					newData[ccode] = 0
+
+			self.organizedInfo[year] = newData
+
+
+		# This Code Normalizes the values
+		for year, obj in self.organizedInfo.items():
+
+			localMin = float("inf")
+			localMax = float("-inf")
+
+			for value in obj.values():
+				if value < localMin:
+					localMin = value
+				if value > localMax:
+					localMax = value
+
+			for country, value in obj.items():
+				normalizedValue = (value - localMin) / (localMax - localMin)
+				obj[country] = normalizedValue
+
 
 # if __name__ == "__main__":
   	# minmax = MinMax("NY.GDP.MKTP.CN")
+  	# minmax.normalizeDataByYear()
   	# print minmax.countryInfo["USA"]
   	# print ()
   	# print minmax.countryInfo["HPC"]
