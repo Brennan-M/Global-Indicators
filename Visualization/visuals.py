@@ -16,10 +16,14 @@ class Visualize(object):
 		def index():
 			return render_template("index.html")
 
-	def min_max_graph(self, attribute):
+	def min_max_graph(self, attribute, normalizeMethod):
 		@app.route("/")
 		def min_max_view():
 			data = MinMax(attribute)
+			if normalizeMethod == 0:
+				data.normalizeDataByYear()
+			else:
+				data.normalizeData()
 			return render_template("min_max.html", data=json.dumps(data.organizedInfo))
 
 	def start(self):
