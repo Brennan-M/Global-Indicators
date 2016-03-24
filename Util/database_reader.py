@@ -16,8 +16,7 @@ DB_PATH = "../Data/world-development-indicators/database.sqlite"
 
 class DatabaseReader(object):
     def __init__(self, path=DB_PATH):
-        # Open connection and cursor
-        print "Connection to DB at", path
+        # Open connection and cursor print "Connection to DB at", path
         self.conn = sqlite3.connect(path, check_same_thread = False)
         self.conn.text_factory = str 
         self.c = self.conn.cursor()
@@ -31,7 +30,9 @@ class DatabaseReader(object):
     that this range is inclusive.
 
     Returns a matrix with the data and a dictionary describing what each
-    of the columns represents.
+    of the columns represents. If there is no entry in the DB for an
+    attribute it will be NaN in the matrix. These smoothed for using utitlity
+    functions in Matrix_Cleaning.py
     """
     def fetchCountryData(self, country_name, date_range = (1960, 2015)):
         # Figure out how big the matrix needs to be
@@ -44,7 +45,8 @@ class DatabaseReader(object):
         for c in  self.c.execute(query):
             cols = int(c[0])
 
-        dataMatrix = np.zeros((date_range[1] - dateRange[0] + 1, cols))
+        dataMatrix = np.empty((date_range[1] - dateRange[0] + 1, cols))
+        dataMatrix[:] = np.NAN
         colDictionary = {}
         
         # Read data from DB
