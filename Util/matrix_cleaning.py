@@ -38,20 +38,16 @@ def removeSparseAttributes(mat, dic, tolerance = 0.8):
     return newMat, newDic
 
 """
-Smooths each column of the matrix to your specification. The smooth function
+Transforms each column of the matrix to your specification. The function
 passed in should take a numpy column vector as an argument.
 
 The return is the matrix you passed in. THE MATRIX YOU PASS IN WILL BE CHANGED!
 """
-def smoothMatrix(mat, smoothFunc):
+def transformColumns(mat, colFunc):
     rows, cols = mat.shape
     for c in range(cols):
-        smoothFunc(mat[:,c])
+        colFunc(mat[:,c])
     return mat
-
-def normalize(mat, normalizeFunc):
-    print "Not yet implemented"
-
 
 """HELPER HIGHER ORDER FUNCTIONS"""
 
@@ -86,6 +82,37 @@ def smoothByAverage(vect):
         if np.isnan(vect[r]):
             vect[r] = valToReplace
 
+""" Normalizing functions """
+def normalizeByMinMax(vect):
+    rows = vect.shape[0]
+    minimum, maximum = min(vect), max(vect)
+    if maximum - minimum < 10 ** -8:
+        for r in range(rows):
+            if not np.isnan(vect[r]):
+                vect[r] = 0
+    else:
+        for r in range(rows):
+            if not np.isnan(vect[r]):
+                vect[r] = float(vect[r] - minimum)/(maximum - minimum)
+
+def normalizeByZScore(vect):
+    rows = vect.shape[0]
+    data = np.array(map(lambda x: x, vect))
+    data = [x for x in data if not np.isnan(x)]
+    if len(data) == 0:
+        return
+    sd = np.std(data)
+    mean = np.mean(data)
+    if sd == 0:
+        for r in range(rows):
+            if not np.isnan(vect[r]):
+                vect[r] = 0
+    else:
+        for r in range(rows):
+            if not np.isnan(vect[r]):
+                vect[r] = float(vect[r] - mean)/sd
+    
+
 if __name__ == '__main__':
     testMat = np.matrix([[np.NAN, 2, 3, 4],
                         [np.NAN, 2, 8, 3],
@@ -99,6 +126,10 @@ if __name__ == '__main__':
     print "----------- removeSparseAttributes -----------"
     print removeSparseAttributes(testMat, testDict)
     print "----------- smoothByReplacement(0)------------"
-    print smoothMatrix(np.copy(testMat), smoothByReplacement(0))
+    print transformColumns(np.copy(testMat), smoothByReplacement(0))
     print "----------- smoothByAverage ------------------"
-    print smoothMatrix(np.copy(testMat), smoothByAverage)
+    print transformColumns(np.copy(testMat), smoothByAverage)
+    print "----------- normalizeByMinMax----------------"
+    print transformColumns(np.copy(testMat), normalizeByMinMax)
+    print "----------- normalizeByZScore ---------------"
+    print transformColumns(np.copy(testMat), normalizeByZScore)

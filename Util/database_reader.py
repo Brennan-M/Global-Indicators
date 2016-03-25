@@ -45,7 +45,7 @@ class DatabaseReader(object):
         for c in  self.c.execute(query):
             cols = int(c[0])
 
-        dataMatrix = np.empty((date_range[1] - dateRange[0] + 1, cols))
+        dataMatrix = np.empty((date_range[1] - date_range[0] + 1, cols))
         dataMatrix[:] = np.NAN
         colDictionary = {}
         
@@ -67,7 +67,7 @@ class DatabaseReader(object):
                 prevIndicator = row[2]
             dataMatrix[(int(row[0]) - date_range[0]), currCol - 1] = row[1]
         
-        return dataMatrix, colDictionary
+        return np.asmatrix(dataMatrix), colDictionary
 
 if __name__ == '__main__':
     db = DatabaseReader()
