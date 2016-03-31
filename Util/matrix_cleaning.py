@@ -6,6 +6,37 @@ Author: Ian Char
 Util functions for cleaning matrices.
 """
 
+
+YEAR_DIC_VALUE = "Year"
+CONSTANT_DIC_VALUE = "Constant"
+
+
+"""
+Add a column to the end of the matrix the value to be added can be a range
+of numbers represented as a tuple (inclusive), or a single number. This will
+make a shallow copy of the matrix but alter the dictionary given. Returns new
+matrix and altered dictionary.
+"""
+def addColumn(mat, dic, colName, value):
+    rows, cols = mat.shape
+    toFill = []
+    if isinstance(value, tuple):
+        if value[1] - value[0] + 1 != rows:
+            raise RuntimeError("Value given does not span the rows of matrix.")
+        toFill = range(value[0], value[1] + 1)
+    else:
+        toFill = [value for _ in range(rows)]
+
+    newMat = np.asmatrix(np.empty((rows, cols + 1)))
+    newMat[:, :cols] = mat
+    for elemNum, elem in enumerate(toFill):
+        newMat[elemNum, cols] = elem
+
+    dic[cols] = colName
+
+    return newMat, dic
+
+
 """
 Splits the given name of the attribute off from the matrix and returns it as a
 vector. Returns a new matrix (old one not altered), new dict (old one not
@@ -155,6 +186,9 @@ if __name__ == '__main__':
     print "----------- Test Matrix -----------"
     print testMat
     print testDict
+    print "------------addColumn--------------"
+    print addColumn(testMat, dict(testDict), YEAR_DIC_VALUE, (17, 21))
+    print addColumn(testMat, dict(testDict), CONSTANT_DIC_VALUE, 8)
     print "------------splitOffAttr-----------"
     print splitOffAttr(testMat, testDict, "B")
     print "----------- removeSparseAttributes -----------"
