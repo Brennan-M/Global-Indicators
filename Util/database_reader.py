@@ -18,14 +18,14 @@ class DatabaseReader(object):
     def __init__(self, path=DB_PATH):
         # Open connection and cursor print "Connection to DB at", path
         self.conn = sqlite3.connect(path, check_same_thread = False)
-        self.conn.text_factory = str 
+        self.conn.text_factory = str
         self.c = self.conn.cursor()
 
     def __del__(self):
         self.conn.close()
 
     """
-    Get a particular country's data over a set of years. If you provide a 
+    Get a particular country's data over a set of years. If you provide a
     date_range make it as a tuple of two integers (e.g. (1960, 1999)). Note
     that this range is inclusive.
 
@@ -34,27 +34,32 @@ class DatabaseReader(object):
     attribute it will be NaN in the matrix. These smoothed for using utitlity
     functions in Matrix_Cleaning.py
     """
-    def fetchCountryData(self, country_name, date_range = (1960, 2015)):
+    def fetchCountryData(self, countryName, excludeAttr = None,
+            dateRange = (1960, 2015), includeConstant = False,
+            includeYear = True):
         # Figure out how big the matrix needs to be
         query = "SELECT COUNT(DISTINCT IndicatorName)" \
                 + " FROM Indicators" \
-                + " WHERE CountryName = \"" + country_name + "\"" \
-                + " AND Year >= " + str(date_range[0]) \
-                + " AND Year <= " + str(date_range[1]) 
+                + " WHERE CountryName = \"" + countryName + "\"" \
+                + " AND Year >= " + str(dateRange[0]) \
+                + " AND Year <= " + str(dateRange[1])
 
         for c in  self.c.execute(query):
             cols = int(c[0])
 
-        dataMatrix = np.empty((date_range[1] - date_range[0] + 1, cols))
+        if cols == 0:
+            raise RuntimeError("Invalid input, no data returned")
+
+        dataMatrix = np.empty((dateRange[1] - dateRange[0] + 1, cols))
         dataMatrix[:] = np.NAN
         colDictionary = {}
-        
+
         # Read data from DB
         query = "SELECT Year, Value, IndicatorName" \
                 + " FROM Indicators" \
-                + " WHERE CountryName = \"" + country_name + "\"" \
-                + " AND Year >= " + str(date_range[0]) \
-                + " AND Year <= " + str(date_range[1]) \
+                + " WHERE CountryName = \"" + countryName + "\"" \
+                + " AND Year >= " + str(dateRange[0]) \
+                + " AND Year <= " + str(dateRange[1]) \
                 + " ORDER BY IndicatorName"
 
         # Fill out matrix and dictionary
@@ -65,8 +70,8 @@ class DatabaseReader(object):
                 colDictionary[currCol] = row[2]
                 currCol += 1
                 prevIndicator = row[2]
-            dataMatrix[(int(row[0]) - date_range[0]), currCol - 1] = row[1]
-        
+            dataMatrix[(int(row[0]) - dateRange[0]), currCol - 1] = row[1]
+
         return np.asmatrix(dataMatrix), colDictionary
 
 if __name__ == '__main__':
@@ -74,5 +79,3 @@ if __name__ == '__main__':
     mat, d = db.fetchCountryData("United States", (2010, 2015))
     print mat
     del db
-
-
