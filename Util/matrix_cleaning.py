@@ -3,8 +3,40 @@ import numpy as np
 """
 Author: Ian Char
 
-Util functions for cleaning matrices. 
+Util functions for cleaning matrices.
 """
+
+"""
+Splits the given name of the attribute off from the matrix and returns it as a
+vector. Returns a new matrix (old one not altered), new dict (old one not
+altered), and the vector of the attribute.
+"""
+def splitOffAttr(mat, dic, attribute):
+    rows, cols = mat.shape
+
+    # Find index in matrix corresponding to attribute
+    attrIndex = -1
+    for key, val in dic.items():
+        if attribute == val:
+            attrIndex = key
+            break
+    if attrIndex < 0:
+        raise RuntimeError("Given attribute was not found in the dictionary.")
+
+    # Remove column
+    attrVect = mat[:, attrIndex]
+
+    newMat = np.asmatrix(np.empty((rows, cols - 1)))
+    newMat[:,:attrIndex] = mat[:,:attrIndex]
+    newMat[:,attrIndex:] = mat[:, (attrIndex + 1):]
+
+    newDic = {}
+    for key, val in dic.items():
+        if key != attrIndex:
+            newDic[key if key < attrIndex else key - 1] = val
+
+    return newMat, newDic, attrVect
+
 
 """
 Looks through the matrix and will remove any column that has more missing
@@ -23,7 +55,7 @@ def removeSparseAttributes(mat, dic, tolerance = 0.8):
         if reduce(accFunc, mat[:,c], 0)/float(rows) >= tolerance:
             colsToInclude.append(c)
 
-    # Create a new matrix and dictionary 
+    # Create a new matrix and dictionary
     if len(colsToInclude) == 0:
         raise RuntimeError("Removing sparse attributes removes all elements")
     newMat = np.asmatrix(np.empty((rows, len(colsToInclude))))
@@ -67,9 +99,9 @@ def smoothByReplacement(valToReplace):
 
 def smoothByAverage(vect):
     rows = vect.shape[0]
-    
+
     valToReplace = 0
-    
+
     # Find average
     accFunc = lambda prev, curr: prev if np.isnan(curr) else curr + prev
     countFunc = lambda prev, curr: prev if np.isnan(curr) else 1 + prev
@@ -111,7 +143,7 @@ def normalizeByZScore(vect):
         for r in range(rows):
             if not np.isnan(vect[r]):
                 vect[r] = float(vect[r] - mean)/sd
-    
+
 
 if __name__ == '__main__':
     testMat = np.matrix([[np.NAN, 2, 3, 4],
@@ -123,6 +155,8 @@ if __name__ == '__main__':
     print "----------- Test Matrix -----------"
     print testMat
     print testDict
+    print "------------splitOffAttr-----------"
+    print splitOffAttr(testMat, testDict, "B")
     print "----------- removeSparseAttributes -----------"
     print removeSparseAttributes(testMat, testDict)
     print "----------- smoothByReplacement(0)------------"
