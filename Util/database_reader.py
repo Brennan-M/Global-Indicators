@@ -48,15 +48,17 @@ class DatabaseReader(object):
         for c in  self.cursor.execute(query):
             cols = int(c[0])
 
+
         if cols == 0:
             raise RuntimeError("Invalid input, no data returned")
 
         dataMatrix = np.empty((dateRange[1] - dateRange[0] + 1, cols))
         dataMatrix[:] = np.NAN
         colDictionary = {}
+        attributeCodeDictionary = {}
 
         # Read data from DB
-        query = "SELECT Year, Value, IndicatorName" \
+        query = "SELECT Year, Value, IndicatorName, IndicatorCode" \
                 + " FROM Indicators" \
                 + " WHERE CountryName = \"" + countryName + "\"" \
                 + " AND Year >= " + str(dateRange[0]) \
@@ -70,15 +72,18 @@ class DatabaseReader(object):
         for row in self.cursor.execute(query):
             if row[2] != prevIndicator:
                 colDictionary[currCol] = row[2]
+                attributeCodeDictionary[row[3]] = currCol
                 currCol += 1
                 prevIndicator = row[2]
             dataMatrix[(int(row[0]) - dateRange[0]), currCol - 1] = row[1]
+        
 
-        return np.asmatrix(dataMatrix), colDictionary
+        return dataMatrix, colDictionary, attributeCodeDictionary
 
-if __name__ == '__main__':
-    db = DatabaseReader()
-    mat, d = db.fetchCountryData("United States", (2010, 2015))
-    print mat
-    print d
-    del db
+
+# if __name__ == '__main__':
+#     db = DatabaseReader()
+#     mat, d = db.fetchCountryData("United States", (2010, 2015))
+#     print mat
+#     print d
+#     del db
