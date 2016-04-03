@@ -11,32 +11,62 @@ class CorrelatedIndicators(object):
 	def __init__(self, attribute, country):
 		self.attribute = attribute
 		self.country = country
+		self.correlationValues = {}
 
 	def calculateCorrelations(self):
 		db = DatabaseReader()
 		dataMatrix, colDictionary, attributeDict = db.fetchCountryData(self.country, (2010, 2014))
 
+		attributeDictReverse = {}
+		for key, value in attributeDict.items():
+			attributeDictReverse[value] = key
+
+
 		correlations = {}
-		for year in dataMatrix:
-			#print year[attributeDict[self.attribute]]
-			pass
-
-		for year in dataMatrix:
-			
-			for col in range(0, len(year+1)):
-				print year[col], year[attributeDict[self.attribute]]
-
-				correlations[]
-				#print col
+		
+		# My correlation dictionary should be in the form of {attribute: []}
+		
+		for key in attributeDict.keys():
+			correlations[key] = []
 		
 
-		# So, we will take a single column of data over a span of years (our attribute), and compute
-		# the correlation coefficient, 
 
-	def findMostCorrelatedIndicators(self):
-		pass
+		for year in range(0, len(dataMatrix)):
+			for attr in range(0, len(dataMatrix[year])):
+				correlations[attributeDictReverse[attr]].append(dataMatrix[year][attr])
+
+		# I need to handle Nans.
+
+		for attr, array in correlations.items():
+			correlations[attr] = pearsonr(array, correlations[self.attribute])[0]
+		
+		return correlations
+
+	def findMostCorrelatedIndicators(self, correlations, k):
+	
+		for key, value in correlations.items():
+			if math.isnan(value):
+				del correlations[key]
+
+		values = list(correlations.values())
+		keys = list(correlations.keys())
+
+		newValues = map(lambda v : math.fabs(v), values)
+
+		mostCorrelated = []
+
+		for i in range(0, k):
+			index = newValues.index(max(newValues))
+			mostCorrelated.append({keys[index]:newValues[index]})
+			del newValues[index]
+			del keys[index]
+
+		print mostCorrelated
+		return mostCorrelated
 
 
 if __name__ == "__main__":
 	ci = CorrelatedIndicators("NY.GDP.MKTP.CD", "United States")
-	ci.calculateCorrelations()
+	correlations = ci.calculateCorrelations()
+	ci.findMostCorrelatedIndicators(correlations, 10)
+

@@ -75,9 +75,10 @@ class DatabaseReader(object):
                 attributeCodeDictionary[row[3]] = currCol
                 currCol += 1
                 prevIndicator = row[2]
-            dataMatrix[(int(row[0]) - date_range[0]), currCol - 1] = row[1]
+            dataMatrix[(int(row[0]) - dateRange[0]), currCol - 1] = row[1]
         
-        return np.asmatrix(dataMatrix), colDictionary, attributeCodeDictionary
+
+        return dataMatrix, colDictionary, attributeCodeDictionary
 
 
 # if __name__ == '__main__':
