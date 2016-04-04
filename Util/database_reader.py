@@ -37,7 +37,8 @@ class DatabaseReader(object):
     attribute it will be NaN in the matrix. These smoothed for using utitlity
     functions in Matrix_Cleaning.py
     """
-    def fetchCountryData(self, countryName, dateRange = (START_DATE, END_DATE)):
+    def fetchCountryData(self, countryName, dateRange = (START_DATE, END_DATE),
+            asNumpyMatrix = True):
         # Figure out how big the matrix needs to be
         query = "SELECT COUNT(DISTINCT IndicatorName)" \
                 + " FROM Indicators" \
@@ -76,7 +77,9 @@ class DatabaseReader(object):
                 currCol += 1
                 prevIndicator = row[2]
             dataMatrix[(int(row[0]) - dateRange[0]), currCol - 1] = row[1]
-        
+
+        if asNumpyMatrix:
+            dataMatrix = np.asmatrix(dataMatrix)
 
         return dataMatrix, colDictionary, attributeCodeDictionary
 

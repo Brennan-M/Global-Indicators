@@ -27,6 +27,10 @@ def plotCountry(x, xName, ys, title, decorations = 'k'):
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     plt.title(title)
 
+    # Turn off exponential form for years
+    ax = plt.gca()
+    ax.get_xaxis().get_major_formatter().set_useOffset(False)
+
     plt.show()
 
 def testPlotCountry():
