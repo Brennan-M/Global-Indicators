@@ -11,10 +11,11 @@ class Cluster(object):
 		self.year = year
 		self.attribute = attribute
 		self.kMeansClusters = None
-		self.centers = []
-		self.clusters = None
+		self.centers = [] 
+		self.clusters = None #index of the cluster that data point belongs to
 
-		self.values = []
+		self.values = [] # 2D array of the year and corresponding data point (all the years will be the same)
+		self.countries = [] #list of country codes in same order of self.values (for putting together dictionary at the end)
 
 		self.conn = sqlite3.connect(path, check_same_thread = False)
 		self.conn.text_factory = str
@@ -23,6 +24,7 @@ class Cluster(object):
 		self.countryCodes = {}
 		self.countryInfo = {} # In format { CountryCode: {Year:Value, Year:Value, etc}, CountryCode: ... }
 		self.organizedInfo = {} # In format { Year: {country:value, country:value, etc}, Year: ... }
+		self.clusterInfo = {} # In format { CountryCode: cluster index, CountryCode: cluster index ... }
 		self.generateData()
 
 	# credit for del, generateData, normalizeData, and normalizeDataByYear
@@ -93,6 +95,7 @@ class Cluster(object):
 					newData[ccode] = 0
 
 			self.organizedInfo[year] = newData
+		self.getValues()
 
 	def normalizeDataByYear(self):
 
@@ -133,29 +136,32 @@ class Cluster(object):
 			for country, value in obj.items():
 				normalizedValue = (value - localMin) / (localMax - localMin)
 				obj[country] = normalizedValue
+		self.getValues()
 
 	def getValues(self):
 		yearInfo = self.organizedInfo[self.year]
 		for key in yearInfo:
 			self.values.append([self.year,yearInfo[key]])
+			self.countries.append(key)
 
 	def kmeans(self):
+		# K-Means Clustering
 		self.kMeansClusters = KMeans(n_clusters=self.k,init='k-means++')
-		#self.kMeansClusters.fit(self.values)
 		self.clusters = self.kMeansClusters.fit_predict(self.values)
 		self.centers = self.kMeansClusters.cluster_centers_
 
+		#putting the results into a dictionary
+		for i in range(0,len(self.values)):
+			country = self.countries[i]
+			cnum = self.clusters[i]
+			self.countryInfo[country] = cnum
+
+
 if __name__ == "__main__":
-  	cluster = Cluster(3, 2014, "NY.GDP.MKTP.CN")
-  	print "country info USA"
-  	#print cluster.countryInfo["USA"]
+  	cluster = Cluster(10, 2014, "NY.GDP.MKTP.KD.ZG") #NY.GDP.MKTP.KD.ZG - GDP growth rate, NY.GDP.MKTP.CD - GDP
+  		#SG.VAW.ARGU.ZS - % women who think their husband is justified in beating her when she argues with him
   	cluster.normalizeDataByYear()
-  	cluster.getValues()
-  	# print cluster.values
-  	# print "year info 2014"
-  	# print cluster.organizedInfo[2014]
-  	# print ()
-  	#print cluster.countryInfo["HPC"]
+  	#cluster.normalizeData()
   	cluster.kmeans()
 	print "year info 2014 CLUSTER"
   	print cluster.clusters

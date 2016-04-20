@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+	<head>
+  		<meta charset="utf-8">
+  		<title>Attribute Min/Max Graph</title>
+	</head>
+	<body>
+		<script src="http://d3js.org/d3.v3.min.js"></script>
+		<script src="http://d3js.org/topojson.v1.min.js"></script>
+		<script src="https://rawgithub.com/markmarkoh/datamaps/master/dist/datamaps.world.js"></script>
+		<h1 align="center" id="attribute"></h1>
+		<div id="container" style="position: relative; width: 1750px; height: 1050px;"></div>
+
+		<script type="text/javascript">
+			
+			cluster_data = {{ data|safe }};
+
+			var paletteScale = d3.scale.linear()
+					.domain([0, 1])
+					.range(["#EFEFFF", "#02386F"]);
+
+		    var map = new Datamap({
+
+		    	element: document.getElementById('container'),
+		    	fills:{
+		    		defaultFill: '#F5F5F5'
+		    	}
+			});
+
+			function map() {
+				var ccodes = Object.keys(cluster_data)[0];
+				document.getElementById("attribute").innerHTML = "Attribute Name";
+				for (var j = 0; j < ccodes.length; j++) {
+
+					ccode = ccodes[j];
+					value = cluster_data[ccode];
+					// console.log(year, ccode, value);
+					var country = {}
+					country[ccode] = {fillColor:paletteScale(value), numberOfThings:value}
+					map.updateChoropleth(country);
+				}
+			}
+
+			map();
+		    
+		</script>
+	</body>
+</html>
