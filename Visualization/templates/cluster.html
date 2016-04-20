@@ -2,7 +2,7 @@
 <html>
 	<head>
   		<meta charset="utf-8">
-  		<title>Attribute Min/Max Graph</title>
+  		<title>Attribute Cluster Graph</title>
 	</head>
 	<body>
 		<script src="http://d3js.org/d3.v3.min.js"></script>
@@ -26,22 +26,25 @@
 		    		defaultFill: '#F5F5F5'
 		    	}
 			});
+			//console.log(cluster_data);
 
-			function map() {
-				var ccodes = Object.keys(cluster_data)[0];
+			function mapit() {
+				//var year = Object.keys(cluster_data)[0];
+				var ccodes = Object.keys(cluster_data);
+				//console.log(ccodes);
 				document.getElementById("attribute").innerHTML = "Attribute Name";
 				for (var j = 0; j < ccodes.length; j++) {
 
 					ccode = ccodes[j];
 					value = cluster_data[ccode];
-					// console.log(year, ccode, value);
+					//console.log(ccode, value);
 					var country = {}
 					country[ccode] = {fillColor:paletteScale(value), numberOfThings:value}
 					map.updateChoropleth(country);
 				}
 			}
 
-			map();
+			mapit();
 		    
 		</script>
 	</body>

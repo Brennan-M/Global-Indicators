@@ -2,15 +2,17 @@
 
 import sqlite3
 from sklearn.cluster import KMeans
+from sklearn.cluster import DBSCAN
 
 DB_PATH = '../Data/world-development-indicators/database.sqlite'
 
 class Cluster(object):
 	def __init__(self, k, year, attribute, path=DB_PATH):
-		self.k = k
+		self.k = k # for k-means, ths number of clusters (not used in DBSCAN)
 		self.year = year
 		self.attribute = attribute
 		self.kMeansClusters = None
+		self.DBSCANClusters = None
 		self.centers = [] 
 		self.clusters = None #index of the cluster that data point belongs to
 
@@ -149,21 +151,33 @@ class Cluster(object):
 		self.kMeansClusters = KMeans(n_clusters=self.k,init='k-means++')
 		self.clusters = self.kMeansClusters.fit_predict(self.values)
 		self.centers = self.kMeansClusters.cluster_centers_
+		self.dict()
 
-		#putting the results into a dictionary
-		for i in range(0,len(self.values)):
+	def dbscan(self):
+		# DBSCAN Clustering - currently does not work, giving it the wrong form of data
+		self.DBSCANClusters = DBSCAN()
+		self.clusters = self.DBSCANClusters.fit_predict(self.values)
+		#self.centers = self.DBSCANClusters.core_sample_indices_
+		self.dict()
+
+	def dict(self):
+		# putting the results into a  (for JSON output
+		for i in range(0,len(self.countries)):
 			country = self.countries[i]
 			cnum = self.clusters[i]
-			self.countryInfo[country] = cnum
+			self.clusterInfo[country] = cnum
 
 
 if __name__ == "__main__":
-  	cluster = Cluster(10, 2014, "NY.GDP.MKTP.KD.ZG") #NY.GDP.MKTP.KD.ZG - GDP growth rate, NY.GDP.MKTP.CD - GDP
+  	cluster = Cluster(10, 2014, "AG.LND.TOTL.K2") #NY.GDP.MKTP.KD.ZG - GDP growth rate, NY.GDP.MKTP.CD - GDP
   		#SG.VAW.ARGU.ZS - % women who think their husband is justified in beating her when she argues with him
+  		#AG.LND.TOTL.K2  - land area in sq. km
   	cluster.normalizeDataByYear()
   	#cluster.normalizeData()
   	cluster.kmeans()
-	print "year info 2014 CLUSTER"
-  	print cluster.clusters
-  	print "CENTERS"
-  	print cluster.centers
+  	#cluster.dbscan()
+  	# print cluster.countries
+  	# print cluster.values
+  	# print cluster.clusters
+  	# print cluster.centers
+  	print cluster.clusterInfo

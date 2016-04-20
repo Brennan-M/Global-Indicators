@@ -27,7 +27,7 @@ class Visualize(object):
 				data.normalizeData()
 			return render_template("min_max.html", data=json.dumps(data.organizedInfo))
 
-	def cluster_graph(self, k, year, attribute, normalizeMethod):
+	def cluster_graph(self, k, year, attribute, clusterMethod, normalizeMethod):
 		@app.route("/")
 		def cluster_view():
 			data = Cluster(k, year, attribute)
@@ -35,6 +35,11 @@ class Visualize(object):
 				data.normalizeDataByYear()
 			else:
 				data.normalizeData()
+
+			if clusterMethod == "kmeans":
+				data.kmeans()
+			elif clusterMethod == "dbscan":
+				data.dbscan()
 			return render_template("cluster.html", data=json.dumps(data.clusterInfo))
 
 	def start(self):

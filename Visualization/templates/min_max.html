@@ -39,7 +39,7 @@
 
 						ccode = ccodes[j];
 						value = min_max_data[year][ccode];
-						// console.log(year, ccode, value);
+						console.log(year, ccode, value);
 						var country = {}
 						country[ccode] = {fillColor:paletteScale(value), numberOfThings:value}
 						map.updateChoropleth(country);
@@ -51,7 +51,7 @@
 				    	timerLoop();
 				    }
 
-				}, 500)
+				}, 1000)
 			}
 
 			timerLoop();
