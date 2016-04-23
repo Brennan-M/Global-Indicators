@@ -19,7 +19,7 @@ class InDepthForm(Form):
    attribute = TextField("Attribute", [validators.Required("Please select an attribute to analyze.")])
    #options = [0, 1]
    #normalizationMethod = SelectField(u'Normalization Method', validators = [validators.Required("Please select a normalization technique.")])
-   normalizationMethod = IntegerField("Normalization Option", [validators.Required("Please select a normalization technique.")])
+   normalizationMethod = SelectField("Normalization Option", choices=[('nby', "Normalize By Year"), ('nba', "Normalize By Aggregate")], validators=[validators.Required("Please select a normalization technique.")])
    submit = SubmitField("Analyze")
 
 
@@ -31,7 +31,7 @@ def index():
 	rd.getIndicators()
 	if request.method == 'POST':
 		if form.validate() == True:
-			return min_max_view(request.form['attribute'], int(request.form['normalizationMethod']))
+			return min_max_view(request.form['attribute'], request.form['normalizationMethod'], rd.data[request.form['attribute']])
 		else:
 			return render_template('index.html', form = form, data=json.dumps(rd.data))
 	elif request.method == 'GET':
@@ -40,13 +40,14 @@ def index():
 
 
 @app.route("/min_max")
-def min_max_view(attribute, normalizeMethod):
+def min_max_view(attribute, normalizeMethod, definition):
 	print normalizeMethod
 	data = MinMax(attribute)
-	if normalizeMethod == 1:
+	if normalizeMethod == "nby":
 		data.normalizeDataByYear()
-	elif normalizeMethod == 2:
+	elif normalizeMethod == "nba":
 		data.normalizeData()
+	data.organizedInfo['attributeAnalyzed'] = definition
 	return render_template("min_max.html", data=json.dumps(data.organizedInfo))
 
 

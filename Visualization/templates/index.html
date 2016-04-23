@@ -49,12 +49,6 @@
 				entry.appendChild(document.createTextNode(key));
 				entry.setAttribute('id', key);
 				entry.onclick = exploreAttribute;
-				// entry.addEventListener('click', function() {
-
-				// 	var infoBox = document.getElementById("attributeDescription");
-				// 	infoBox.innerHTML = indicator_data[document.getElementById(key).getAttribute("id")];
-
-				// });
 				list.appendChild(entry);
 			}
 
@@ -62,11 +56,7 @@
 				var infoBox = document.getElementById("attributeDescription");
 				infoBox.innerHTML = indicator_data[this.getAttribute("id")];
 			}
-			// list.addEventListener('click', function(e) {
-   //  			if (e.target.tagName === 'LI'){
-   //    				alert(e.target.id);  // Check if the element is a LI
-   //  			}
-			// });
+		
 		    
 		</script>
 </html>
