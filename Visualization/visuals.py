@@ -31,11 +31,11 @@ def index():
 	rd.getIndicators()
 	if request.method == 'POST':
 		if form.validate() == True:
-			return min_max_view(request.form['attribute'], request.form['normalizationMethod'], rd.data[request.form['attribute']])
+			return min_max_view(request.form['attribute'], request.form['normalizationMethod'], rd.indicatorData[request.form['attribute']])
 		else:
-			return render_template('index.html', form = form, data=json.dumps(rd.data))
+			return render_template('index.html', form = form, data=json.dumps(rd.indicatorData))
 	elif request.method == 'GET':
-		return render_template('index.html', form = form, data=json.dumps(rd.data))
+		return render_template('index.html', form = form, data=json.dumps(rd.indicatorData))
 
 
 
