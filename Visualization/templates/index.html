@@ -1,4 +1,62 @@
 <!DOCTYPE html>
+
 <html>
+	<head>
+		<style>
+			ul { 
+				height:200px;
+				width:18%;
+				overflow:hidden;
+				overflow-y:scroll;
+			}
+		</style>
+	</head>
 	<h1>CSCI 5502: Welcome to World Indicator Visualization Tools</h1>
+
+	<form action="/" method="post">
+		
+		    <div class="container-fluid" style = font-size:20px; font-weight:bold;>
+	               {{ form.attribute.label }}
+	               {{ form.attribute }}
+	               	{% for message in form.attribute.errors %}
+	                        <div style="color:#FF0000"> {{ message }}</div>
+	                {% endfor %}
+	               <br>
+	               {{ form.normalizationMethod.label }}
+	               {{ form.normalizationMethod }}
+	                {% for message in form.normalizationMethod.errors %}
+	                        <div style="color:#FF0000"> {{ message }}</div>
+	                {% endfor %}
+	               <br>
+	               {{ form.submit }}
+	               <br>
+	        </div>
+	</form>
+	<div>
+		<ul id="listOfIndicators">
+		</ul>
+		<p id="attributeDescription"></p>
+	</div>
+	<script type="text/javascript">
+			
+
+			indicator_data = {{ data|safe }};
+
+			var list = document.getElementById("listOfIndicators");
+
+			for (var key in indicator_data) {
+				var entry = document.createElement('li');
+				entry.appendChild(document.createTextNode(key));
+				entry.setAttribute('id', key);
+				entry.onclick = exploreAttribute;
+				list.appendChild(entry);
+			}
+
+			function exploreAttribute() {
+				var infoBox = document.getElementById("attributeDescription");
+				infoBox.innerHTML = indicator_data[this.getAttribute("id")];
+			}
+		
+		    
+		</script>
 </html>

@@ -16,7 +16,7 @@ class CorrelatedIndicators(object):
 	def calculateCorrelations(self):
 		db = DatabaseReader()
 		dataMatrix, colDictionary, attributeDict = db.fetchCountryData(
-				self.country, (2010, 2014), asNumpyMatrix = False)
+				self.country, (1960, 2014), asNumpyMatrix = False)
 
 		attributeDictReverse = {}
 		for key, value in attributeDict.items():
