@@ -84,6 +84,11 @@ class DatabaseReader(object):
 
         return dataMatrix, colDictionary, attributeCodeDictionary
 
+    """
+    Get a number of attributes for a specific year. Here, the countries are on
+    the rows, and the attributes are on the columns. This will return a numpy
+    matrix, a row dictionary (maps indexes to country name), and a col dictionary
+    """
     def fetchAttributesData(self, attributes, year):
         if type(attributes) != list:
             raise AttributeError("attributes must be a list")
@@ -132,12 +137,63 @@ class DatabaseReader(object):
         # for room in the matrix starting at the bottom
         return mat[:highestOccupiedRow + 1,:], rowDic, colDic
 
+
+    """
+    Constructs a matrix for a single attribute over several different years for
+    all countries. In the matrix each row is a country and each column is a year
+    """
+    def fetchAttributeOverTimeData(self, attribute, \
+            dateRange = (START_DATE, END_DATE)):
+        if type(attribute) != str:
+            raise AttributeError("The attribute passed must be a string.")
+
+        numCountries = self.countNumberCountries()
+        mat = np.asmatrix(np.empty((numCountries, dateRange[1] - dateRange[0] + 1)))
+        mat[:] = np.NAN
+        rowDic = {} # Rows represent countries
+        colDic = {} # Columns represent years
+
+        # Fill in colDic
+        for col, year in enumerate(range(dateRange[0], dateRange[1] + 1)):
+            colDic[col] = year
+
+        query = "SELECT CountryName, Year, Value" \
+                + " FROM Indicators" \
+                + " WHERE IndicatorName = \"" + attribute + "\"" \
+                + " AND Year >= " + str(dateRange[0]) \
+                + " AND Year <= " + str(dateRange[1]) + ";"
+
+        for row in self.cursor.execute(query):
+            currCountry = row[0]
+            currYear = row[1]
+            currVal = row[2]
+
+            if currCountry in rowDic.keys():
+                mat[rowDic[currCountry], currYear - dateRange[0]] = currVal
+            else:
+                foundRow = False
+                for potentialRow in range(numCountries):
+                    if potentialRow not in rowDic.values():
+                        rowDic[currCountry] = potentialRow
+                        mat[potentialRow, currYear - dateRange[0]] = currVal
+                        foundRow = True
+                        break
+                if not foundRow:
+                    raise RuntimeError("Something went wronge while" \
+                            + " forming the matrix hmm...")
+
+        #Inverse row dictionary
+        highestOccupiedRow = max(rowDic.values())
+        rowDic = {v: k for k, v in rowDic.items()}
+
+        return mat[:highestOccupiedRow + 1,:], rowDic, colDic
+
+
     def countNumberCountries(self):
         query = "SELECT COUNT(DISTINCT CountryCode)" \
                 + " FROM Country;"
         for row in self.cursor.execute(query):
             return int(row[0])
-
 
 
 def testFetchcountryData(db):
@@ -156,8 +212,14 @@ def testFetchAttributeData(db):
     print mat, rows, cols
     print mat.shape
 
+def testFetchAttributeOverTimeData(db):
+    attr = "Access to electricity (% of population)"
+    mat, rows, cols = db.fetchAttributeOverTimeData(attr)
+    print mat, rows, cols
+    print mat.shape
+
 if __name__ == '__main__':
     db = DatabaseReader()
     # testFetchcountryData(db)
-    testFetchAttributeData(db)
+    testFetchAttributeOverTimeData(db)
     del db
