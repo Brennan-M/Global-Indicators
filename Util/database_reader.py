@@ -15,6 +15,7 @@ Examples in main function...
 DB_PATH = "../Data/world-development-indicators/database.sqlite"
 START_DATE = 1960
 END_DATE = 2014
+NUM_COUNTRIES = 247
 
 
 class DatabaseReader(object):
@@ -83,10 +84,80 @@ class DatabaseReader(object):
 
         return dataMatrix, colDictionary, attributeCodeDictionary
 
+    def fetchAttributesData(self, attributes, year):
+        if type(attributes) != list:
+            raise AttributeError("attributes must be a list")
 
-# if __name__ == '__main__':
-#     db = DatabaseReader()
-#     mat, d = db.fetchCountryData("United States", (2010, 2015))
-#     print mat
-#     print d
-#     del db
+        numCountries = self.countNumberCountries()
+        mat = np.asmatrix(np.empty((numCountries, len(attributes))))
+        mat[:] = np.NAN
+        rowDic = {} # Rows represent countries
+        colDic = {} # Columns represent attributes
+
+        # Assemble queries to construct the matrix
+        for col, attr in enumerate(attributes):
+            colDic[attr] = col
+
+            query = "SELECT CountryName, Value" \
+                    + " FROM Indicators" \
+                    + " WHERE IndicatorName = \"" + attr + "\"" \
+                    + " AND YEAR = " + str(year) + ";"
+
+            for row in self.cursor.execute(query):
+                currCountry = row[0]
+                currVal = row[1]
+
+                if currCountry in rowDic.keys():
+                    mat[rowDic[currCountry], col] = currVal
+                else:
+                    foundRow = False
+                    for potentialRow in range(numCountries):
+                        if potentialRow not in rowDic.values():
+                            rowDic[currCountry] = potentialRow
+                            mat[potentialRow, col] = currVal
+                            foundRow = True
+                            break
+                    if not foundRow:
+                        raise RuntimeError("Something went wronge while" \
+                                + " forming the matrix hmm...")
+
+        # Inverse row and column dictionaries
+        # courtesy of http://stackoverflow.com/questions/483666/python-reverse-inverse-a-mapping
+        highestOccupiedRow = max(rowDic.values())
+        rowDic = {v: k for k, v in rowDic.items()}
+        colDic = {v: k for k, v in colDic.items()}
+
+        # Chop off rows that have no information we should just be able to
+        # find the highest row that is occupied and chop after since we look
+        # for room in the matrix starting at the bottom
+        return mat[:highestOccupiedRow + 1,:], rowDic, colDic
+
+    def countNumberCountries(self):
+        query = "SELECT COUNT(DISTINCT CountryCode)" \
+                + " FROM Country;"
+        for row in self.cursor.execute(query):
+            return int(row[0])
+
+
+
+def testFetchcountryData(db):
+    mat, d, d2 = db.fetchCountryData("United States", (2010, 2015))
+    print mat
+    print d
+
+def testCountNumberCountries(db):
+    print db.countNumberCountries()
+
+def testFetchAttributeData(db):
+    attrs = ["Access to electricity (% of population)",  \
+            "Access to non-solid fuel (% of population)", \
+            "Adequacy of social insurance programs (% of total welfare of beneficiary households)"]
+    mat, rows, cols = db.fetchAttributesData(attrs, 2000)
+    print mat, rows, cols
+    print mat.shape
+
+if __name__ == '__main__':
+    db = DatabaseReader()
+    # testFetchcountryData(db)
+    testFetchAttributeData(db)
+    del db
