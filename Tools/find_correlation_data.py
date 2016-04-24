@@ -16,8 +16,21 @@ class CorrelatedIndicators(object):
 
 	def calculateCorrelations(self):
 		db = DatabaseReader()
+		startYear = 2000
+		endYear = 2014
 		dataMatrix, colDictionary, attributeDict = db.fetchCountryData(
-				self.country, (2000, 2014), useCountryCode=False, asNumpyMatrix=False)
+				self.country, (startYear, endYear), useCountryCode=False, asNumpyMatrix=False)
+
+		rowDic = {}
+		currRow = 0
+		for yr in range(startYear, endYear + 1):
+			rowDic[currRow] = yr
+			currRow += 1
+
+		dataMatrix, rowDic = clean.findValidTimeRange(dataMatrix.T, rowDic)
+		dataMatrix = dataMatrix.T
+
+		dataMatrix = clean.transformColumns(dataMatrix, clean.smoothByAverage)
 
 		#dataMatrix, colDictionary = clean.removeSparseAttributes(dataMatrix, colDictionary, 0.9)
 
@@ -91,5 +104,3 @@ if __name__ == "__main__":
 	ci = CorrelatedIndicators("NY.GDP.MKTP.KD.ZG", "United States")
 	ci.calculateCorrelations()
 	print ci.correlationValues
-
-
