@@ -15,10 +15,8 @@ sys.path.append('../Util')
 from database_reader import DatabaseReader
 import matrix_cleaning
 
-DB_PATH = '../Data/world-development-indicators/database.sqlite'
-
 class Cluster(object):
-	def __init__(self, year, attributes, k=5, normalizeMethod=0, path=DB_PATH):
+	def __init__(self, year, attributes, k=5, normalizeMethod=0):
 		self.k = k # For k-means, the number of clusters (not used in DBSCAN)
 		self.year = year # Indicated year for the attributes we are clustering on
 		self.attributes = attributes # List of attributes to cluster on
@@ -34,7 +32,7 @@ class Cluster(object):
 
 		self.organizedInfo = {} # In format { Year: {country:value, country:value, etc}, Year: ... }
 			# This is the dictionary needed for visuals
-			
+
 		self.getData()
 
 	def getData(self):
