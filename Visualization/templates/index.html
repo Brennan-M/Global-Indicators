@@ -30,6 +30,12 @@
 			                        <div style="color:#FF0000"> {{ message }}</div>
 			               {% endfor %}
 			               <br>
+			               {{ form.smoothingMethod.label }}
+			               {{ form.smoothingMethod }}
+			               {% for message in form.smoothingMethod.errors %}
+			                        <div style="color:#FF0000"> {{ message }}</div>
+			               {% endfor %}
+			               <br>
 			               <input type="submit" name="minmax" value="Visualize Global Data">
 			        </div>
 			</form>

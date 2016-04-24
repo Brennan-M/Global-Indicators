@@ -17,12 +17,12 @@ app = Flask(__name__)
 
 
 class MinMaxForm(Form):
-   attribute = TextField("Attribute", [validators.Required("Please select an attribute to analyze.")])
+   attribute = TextField("Attribute Code", [validators.Required("Please select an attribute to analyze.")])
    normalizationMethod = SelectField("Normalization Option", choices=[('nby', "Normalize By Year"), ('nba', "Normalize By Aggregate")], validators=[validators.Required("Please select a normalization technique.")])
-   # minMaxSubmit = SubmitField("Visualize Global Data")
+   smoothingMethod = SelectField("Smoothing Option", choices=[('average', "Smooth By Average"), ('interpolation', "Smooth By Interpolation"), ('replacement', "Smooth By Constant (0)")], validators=[validators.Required("Please select a smoothing technique.")])
 
 class CorrelationForm(Form):
-	attribute2 = TextField("Attribute", [validators.Required("Please select an attribute to analyze.")])
+	attribute2 = TextField("Attribute Code", [validators.Required("Please select an attribute to analyze.")])
 	country = TextField("Country", [validators.Required("Please select a country.")])
 	correlationSubmit = SubmitField("Calculate Correlation Values")
 
@@ -38,7 +38,7 @@ def index():
 
 	if request.method == 'POST':
 		if mmForm.validate() and request.form['minmax'] == 'Visualize Global Data':
-			return min_max_view(request.form['attribute'], request.form['normalizationMethod'], rd.indicatorData[request.form['attribute']])
+			return min_max_view(request.form['attribute'], request.form['normalizationMethod'], rd.indicatorData[request.form['attribute']], request.form['smoothingMethod'])
 		elif cForm.validate() and request.form['correlation'] == 'Calculate Correlations':
 			return correlation_view(request.form['attribute2'], request.form['country'], rd.indicatorData)
 		else:
@@ -56,7 +56,7 @@ def correlation_view(attribute, country, indicatorData):
 
 
 @app.route("/min_max", methods=["GET", "POST"])
-def min_max_view(attribute, normalizeMethod, indicatorData):
+def min_max_view(attribute, normalizeMethod, definition, smoothingMethod):
 
 		data = MinMax(attribute)
 		if normalizeMethod == "nby":
