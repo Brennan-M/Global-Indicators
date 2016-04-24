@@ -11,7 +11,7 @@ sys.path.append('../Tools')
 from generate_min_max_data import MinMax
 from retrieve_db_data import RetrieveData
 from find_correlation_data import CorrelatedIndicators
-#from generate_cluster_data import Cluster
+from generate_cluster_data import Cluster
 
 app = Flask(__name__)
 
@@ -25,6 +25,9 @@ class CorrelationForm(Form):
 	attribute2 = TextField("Attribute Code", [validators.Required("Please select an attribute to analyze.")])
 	country = TextField("Country", [validators.Required("Please select a country.")])
 	correlationSubmit = SubmitField("Calculate Correlation Values")
+
+class ClusterForm(Form):
+	attributes = TextField("Attributes, Comma Separated", [validators.Required("Please select attributes to analyze, at least 2.")])
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -63,6 +66,12 @@ def min_max_view(attribute, normalizeMethod, definition, smoothingMethod):
     data['attributeAnalyzed'] = definition
 
     return render_template("min_max.html", form = form, data=json.dumps(data))
+
+@app.route("/cluster", methods=["GET", "POST"])
+def cluster_view(yearOptions, attributes, kvalue):
+	#clusterData = Cluster("2012", 5, attributes)
+
+	return render_template("cluster.html")
 
 
 def start():

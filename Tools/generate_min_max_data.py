@@ -47,6 +47,8 @@ class MinMax(object):
 def test():
     mm = MinMax()
     mm.generateData("NY.GDP.MKTP.KD", "", "")
-
+    
+"""
 if __name__ == '__main__':
     test()
+"""

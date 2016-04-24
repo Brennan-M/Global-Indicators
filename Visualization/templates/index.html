@@ -4,17 +4,41 @@
 	<head>
 		<style>
 			ul { 
-				height:200px;
-				width:18%;
+				height:500px;
 				overflow:hidden;
 				overflow-y:scroll;
 			}
+			.wrapper{
+			   width: 95%;
+			   border: 1px solid red;
+			}
+			.one, .two, .three{
+			   display:block;
+			   width:33%;
+			   border: 1px solid green;
+			   box-sizing: border-box;
+			}
+			.one{
+			   float:left;
+			}
+			.two{
+			   margin:0 auto;
+			}
+			.three{
+			   float:right;
+			}
+			.listOne, .listTwo{
+				display:block;
+				width:30%;
+				box-sizing: border-box;
+			}
+
 		</style>
 	</head>
 	<body>
 	<h1>CSCI 5502: Welcome to World Indicator Visualization Tools</h1>
-	<div>
-		<div>
+	<div class="wrapper">
+		<div class="one">
 			<form action="/" method="post" value="minmax">
 				
 				    <div class="container-fluid" style = font-size:20px; font-weight:bold;>
@@ -40,17 +64,26 @@
 			        </div>
 			</form>
 		</div>
-		<div>
-			<h4>Indicators</h4>
-			<ul id="listOfIndicators">
-			</ul>
-			<p id="attributeDescription"></p>
-			<br>
-			<h4>Countries</h4>
-			<ul id="listOfCountries">
-			</ul>
+		<div class="two">
+			<form action="/" method="post" value="correlation">
+				<div class="container-fluid" style = font-size:20px; font-weight:bold;>
+	               {{ form2.attribute2.label }}
+	               {{ form2.attribute2 }}
+	               {% for message in form2.attribute2.errors %}
+	                        <div style="color:#FF0000"> {{ message }}</div>
+	               {% endfor %}
+		           <br>
+		           {{ form2.country.label }}
+	               {{ form2.country }}
+	               {% for message in form2.country.errors %}
+	                        <div style="color:#FF0000"> {{ message }}</div>
+	               {% endfor %}
+	               <br>
+					<input type="submit" name="correlation" value="Calculate Correlations">
+				</div>
+			</form>
 		</div>
-		<div>
+		<div class="three">
 			<form action="/" method="post" value="correlation">
 				<div class="container-fluid" style = font-size:20px; font-weight:bold;>
 	               {{ form2.attribute2.label }}
@@ -70,6 +103,26 @@
 			</form>
 		</div>
 	</div>
+		<br>
+		<div class="wrapper">
+			<div class="listOne">
+				<div class="container-fluid">
+				<br>
+				<h4>Indicators</h4>
+				<ul id="listOfIndicators">
+				</ul>
+				<p id="attributeDescription"></p>
+				</div>
+			</div>
+			<div class="listTwo">
+				<div class="container-fluid">
+				<br>
+				<h4>Countries</h4>
+				<ul id="listOfCountries">
+				</ul>
+				</div>
+			</div>
+		</div>
 	</body>
 	<script type="text/javascript">
 			

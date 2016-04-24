@@ -6,9 +6,9 @@ using KMeans, DBSCAN, or Spectral clustering.
 Output a dictionary of country codes associated with the
 index of the cluster to which that country belongs.
 '''
+
 import sys
 import sqlite3
-import numpy as np
 from sklearn.cluster import KMeans, DBSCAN, SpectralClustering
 
 sys.path.append('../Util')
@@ -30,7 +30,7 @@ class Cluster(object):
 		self.countries = None # Dictionary that maps cluster indexes to country codes
 		self.col = None # Column dictionary (??)
 
-		self.organizedInfo = {} # In format { Year: {country:value, country:value, etc}, Year: ... }
+		self.clusterData = {} # In format { Year: {country:value, country:value, etc}, Year: ... }
 			# This is the dictionary needed for visuals
 
 		self.getData()
@@ -40,20 +40,23 @@ class Cluster(object):
 		self.values, self.countries, self.col = db.fetchAttributesData(self.attributes,self.year)
 
 		# Replacing NaN values
-		matrix_cleaning.transformColumns(self.values,matrix_cleaning.smoothByReplacement(0))
+		# Can we smooth by interpolation instead possibly?
+		matrix_cleaning.transformColumns(self.values, matrix_cleaning.smoothByReplacement(0))
 
+
+		# No Need to normalize I dont think?
 		# Normalizing the values
-		if (self.normalizeMethod == 0):
-			matrix_cleaning.transformColumns(self.values,matrix_cleaning.normalizeByZScore)
-		elif(self.normalizeMethod == 1):
-			matrix_cleaning.transformColumns(self.values,matrix_cleaning.normalizeByMinMax)
-		elif(self.normalizeMethod == 2):
-			matrix_cleaning.transformColumns(self.values,matrix_cleaning.normalizeByAverage)
+		# if (self.normalizeMethod == 0):
+		# 	matrix_cleaning.transformColumns(self.values,matrix_cleaning.normalizeByZScore)
+		# elif(self.normalizeMethod == 1):
+		# 	matrix_cleaning.transformColumns(self.values,matrix_cleaning.normalizeByMinMax)
+		# elif(self.normalizeMethod == 2):
+		# 	matrix_cleaning.transformColumns(self.values,matrix_cleaning.normalizeByAverage)
 
 
 	def kmeans(self):
 		# K-Means Clustering
-		self.Clusters = KMeans(n_clusters=self.k,init='k-means++')
+		self.Clusters = KMeans(n_clusters=self.k, init='k-means++')
 		self.clusterIndex = self.Clusters.fit_predict(self.values)
 		self.centers = self.Clusters.cluster_centers_
 		self.output()
@@ -76,19 +79,21 @@ class Cluster(object):
 		countryValues = {}
 		for i in range(0,len(self.clusterIndex)):
 			countryValues.update({self.countries[i]:self.clusterIndex[i]})
-		self.organizedInfo.update({self.year:countryValues})
+		self.clusterData.update({self.year:countryValues})
 
 
-# if __name__ == "__main__":
-#   	cluster = Cluster(2014, ["AG.LND.TOTL.K2","NY.GDP.MKTP.CD"], 10) #NY.GDP.MKTP.KD.ZG - GDP growth rate, NY.GDP.MKTP.CD - GDP
-#   		#SG.VAW.ARGU.ZS - % women who think their husband is justified in beating her when she argues with him
-#   		#AG.LND.TOTL.K2  - land area in sq. km
-#   	# print cluster.values
-#   	# cluster.kmeans()
-#   	# cluster.dbscan()
-#   	cluster.spectral()
-#   	# print cluster.countries
-#   	# print cluster.values
-#   	# print cluster.clusters
-#   	# print cluster.centers
-#   	print cluster.organizedInfo
+if __name__ == "__main__":
+  	cluster = Cluster(2014, ["AG.LND.TOTL.K2","NY.GDP.MKTP.CD"], 2) #NY.GDP.MKTP.KD.ZG - GDP growth rate, NY.GDP.MKTP.CD - GDP
+  		#SG.VAW.ARGU.ZS - % women who think their husband is justified in beating her when she argues with him
+  		#AG.LND.TOTL.K2  - land area in sq. km
+  	# print cluster.values
+  	# cluster.kmeans()
+	# cluster.dbscan()
+  	cluster.spectral()
+  	# print cluster.countries
+  	# print cluster.values
+  	# print cluster.clusters
+  	# print cluster.centers
+  	print cluster.clusterData
+
+
