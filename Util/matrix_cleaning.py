@@ -117,6 +117,48 @@ def removeSparseAttributes(mat, colDic, tolerance = 0.8):
     return newMat, newDic
 
 """
+Cuts off consecutive columns that have a certain amount of non-nans. We assume
+here that the years are on the columns.
+"""
+def findValidTimeRange(mat, colDic, nanUpperThreshold = 1.0):
+    rows, cols = mat.shape
+    start = 0
+    end = cols - 1
+    accFunc = accFunc = lambda prev, curr: 1 + prev if np.isnan(curr) else prev
+
+    # Find a good start
+    nanAmount = 1.0
+    while nanAmount >= nanUpperThreshold:
+        nanAmount = reduce(accFunc, mat[:, start], 0)/float(rows)
+        if nanAmount >= nanUpperThreshold:
+            start += 1
+
+    # Find a good end
+    nanAmount = 1.0
+    while nanAmount > nanUpperThreshold:
+        nanAmount = reduce(accFunc, mat[:, end], 0)/float(rows)
+        if nanAmount >= nanUpperThreshold:
+            end -= 1
+
+    if start > end:
+        print "No valid time range could be found for the data!", start, end
+        return np.matrix([[np.NAN]]), {}
+
+    # fit mat and dict to this range
+    validRange = range(start, end + 1)
+    for key in colDic.keys():
+        if key not in validRange:
+            del colDic[key]
+
+    # Readjust dic values
+    for c in range(cols):
+        if c <= end - start:
+            colDic[c] = colDic[c + start]
+        else:
+            del colDic[c]
+
+    return mat[:, start:end + 1], colDic
+"""
 Transforms each column of the matrix to your specification. The function
 passed in should take a numpy column vector as an argument.
 
@@ -201,6 +243,8 @@ def testBasics():
     print "----------- Test Matrix -----------"
     print testMat
     print testDict
+    print "-------------findValidTimeRange--------------"
+    print findValidTimeRange(np.copy(testMat), dict(testDict))
     print "------------addColumn--------------"
     print addColumn(testMat, dict(testDict), YEAR_DIC_VALUE, (17, 21))
     print addColumn(testMat, dict(testDict), CONSTANT_DIC_VALUE, 8)
