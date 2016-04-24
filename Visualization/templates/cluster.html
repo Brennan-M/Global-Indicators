@@ -3,26 +3,66 @@
 	<head>
   		<meta charset="utf-8">
   		<title>Attribute Cluster Graph</title>
+  		<style> 
+  		</style>
 	</head>
 	<body>
 		<script src="http://d3js.org/d3.v3.min.js"></script>
 		<script src="http://d3js.org/topojson.v1.min.js"></script>
 		<script src="https://rawgithub.com/markmarkoh/datamaps/master/dist/datamaps.world.js"></script>
-		<h1 align="center" id="year"></h1>
+		<h1 align="center" id="info"></h1>
+		<h3 align="left">Clustering On...</h3>
+		<ul id="listOfIndicators">
+		</ul>
 		<div id="container" style="position: relative; width: 1750px; height: 1050px;"></div>
 
 		<script type="text/javascript">
 			
 			clusterData = {{ clusterData|safe }};
+			indicatorData = {{ indicatorData|safe }};
 
+			document.getElementById("info").innerHTML = clusterData['year'] + ": " + clusterData["kvalue"] + " Clusters"
+
+
+			var attributeList = document.getElementById("listOfIndicators");
+
+			for (var i = 0; i < clusterData['attributes'].length; i++) {
+				var entry = document.createElement('li');
+				entry.appendChild(document.createTextNode(indicatorData[clusterData['attributes'][i]]));
+				attributeList.appendChild(entry);
+			}
+ 
 		    var map = new Datamap({
 
 		    	element: document.getElementById('container'),
+		    	fills:{
+		    		0: '#FF0000',
+		    		1: '#00FF00',
+		    		2: '#0000FF',
+		    		3: '#FF00FF',
+		    		4: '#00FFFF',
+		    		5: '#FFFF00',
+		    		6: '#808000',
+		    		7: '#008080',
+		    		8: '#800080',
+		    		9: '#F00080',
+		    		defaultFill: '#F5F5F5'
+		    	}
 		    	
 			});
 
+		    var ccodes = Object.keys(clusterData[clusterData['year']]);
+
+		    for (var j = 0; j < ccodes.length; j++) {
+
+				ccode = ccodes[j];
+				correspondingCluster = clusterData[clusterData['year']][ccode];
+				var country = {}
+				country[ccode] = {fillKey : correspondingCluster}
+				map.updateChoropleth(country);
+			}
+
 		
-		    console.log(clusterData)
 		</script>
 	</body>
 </html>

@@ -46,7 +46,7 @@ def index():
 		elif cForm.validate() and request.form['correlation'] == 'Calculate Correlations':
 			return correlation_view(request.form['attribute2'], request.form['country'], rd.indicatorData)
 		elif clusterForm.validate() and request.form['cluster'] == 'Cluster':
-			return cluster_view(request.form['attributes'], request.form['kvalue'], request.form['clusterTechnique'], request.form['year'])
+			return cluster_view(request.form['attributes'], request.form['kvalue'], request.form['clusterTechnique'], request.form['year'], rd.indicatorData)
 		else:
 			return render_template('index.html', form3 = clusterForm, form2 = cForm, form = mmForm, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
 	elif request.method == 'GET':
@@ -54,12 +54,26 @@ def index():
 
 
 @app.route("/cluster", methods=["GET", "POST"])
-def cluster_view(attributes, kvalue, clusterTechnique, year):
+def cluster_view(attributes, kvalue, clusterTechnique, year, indicatorData):
 
 	attributeList = attributes.split(",")
-	cluster = Cluster(attributeList, int(kvalue), int(year), clusterTechnique)
-	#print cluster.clusterData
-	return render_template("cluster.html", clusterData=json.dumps(cluster.clusterData))
+	attributeList = [x.strip() for x in attributeList]
+
+	kvalue = int(kvalue)
+	year = int(year)
+	if kvalue > 10:
+		kvalue = 10
+	if year < 1961:
+		year = 1961
+	elif year > 2014:
+		year = 2014
+
+	cluster = Cluster(attributeList, kvalue, year, clusterTechnique)
+	cluster.clusterData["attributes"] = attributeList
+	cluster.clusterData["year"] = year
+	cluster.clusterData["kvalue"] = kvalue
+	cluster.clusterData["clusterTechnique"] = clusterTechnique
+	return render_template("cluster.html", indicatorData=json.dumps(indicatorData), clusterData=json.dumps(cluster.clusterData))
 
 
 @app.route("/correlations", methods=["GET", "POST"])
