@@ -41,14 +41,10 @@ def index():
 
 @app.route("/min_max")
 def min_max_view(attribute, normalizeMethod, definition):
-	print normalizeMethod
-	data = MinMax(attribute)
-	if normalizeMethod == "nby":
-		data.normalizeDataByYear()
-	elif normalizeMethod == "nba":
-		data.normalizeData()
-	data.organizedInfo['attributeAnalyzed'] = definition
-	return render_template("min_max.html", data=json.dumps(data.organizedInfo))
+    mm = MinMax()
+    data = mm.generateData(attribute, normalizeMethod, "SMOOTHING")
+    data['attributeAnalyzed'] = definition
+    return render_template("min_max.html", data=json.dumps(data))
 
 
 def start():
@@ -76,4 +72,3 @@ if __name__ == "__main__":
 				data.dbscan()
 			return render_template("cluster.html", data=json.dumps(data.clusterInfo))
 '''
-
