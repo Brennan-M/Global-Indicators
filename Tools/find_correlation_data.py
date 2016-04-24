@@ -5,6 +5,7 @@ import sys
 
 sys.path.append('../Util/')
 from database_reader import DatabaseReader
+import matrix_cleaning as clean
 
 class CorrelatedIndicators(object):
 
@@ -16,7 +17,16 @@ class CorrelatedIndicators(object):
 	def calculateCorrelations(self):
 		db = DatabaseReader()
 		dataMatrix, colDictionary, attributeDict = db.fetchCountryData(
-				self.country, (2000, 2014), asNumpyMatrix = False)
+				self.country, (2000, 2014), useCountryCode=False, asNumpyMatrix=False)
+
+		#dataMatrix, colDictionary = clean.removeSparseAttributes(dataMatrix, colDictionary, 0.9)
+
+		#Row is Year
+		#Col is Attribute
+
+		#dataMatrix = dataMatrix.tolist()
+
+		#print dataMatrix
 
 		attributeDictReverse = {}
 		for key, value in attributeDict.items():
@@ -29,7 +39,6 @@ class CorrelatedIndicators(object):
 
 		for key in attributeDict.keys():
 			correlations[key] = []
-
 
 
 		for year in range(0, len(dataMatrix)):
@@ -49,9 +58,11 @@ class CorrelatedIndicators(object):
 			if math.isnan(value):
 				del correlations[key]
 
-		self.correlationValues = correlations
+		self.correlationValues = []
+		for key, value in correlations.items():
+			self.correlationValues.append((key, value))
 
-
+		self.correlationValues = sorted(self.correlationValues, key=lambda x: x[1])
 
 	def findMostCorrelatedIndicators(self, correlations, k):
 
@@ -75,10 +86,10 @@ class CorrelatedIndicators(object):
 		print mostCorrelated
 		return mostCorrelated
 
-'''
+
 if __name__ == "__main__":
 	ci = CorrelatedIndicators("NY.GDP.MKTP.KD.ZG", "United States")
-	correlations = ci.calculateCorrelations()
+	ci.calculateCorrelations()
 	print ci.correlationValues
-	#ci.findMostCorrelatedIndicators(correlations, 10)
-'''
+
+

@@ -11,43 +11,60 @@
 			}
 		</style>
 	</head>
+	<body>
 	<h1>CSCI 5502: Welcome to World Indicator Visualization Tools</h1>
-
-	<form action="/" method="post">
-		
-		    <div class="container-fluid" style = font-size:20px; font-weight:bold;>
-	               {{ form.attribute.label }}
-	               {{ form.attribute }}
-	               {% for message in form.attribute.errors %}
-	                        <div style="color:#FF0000"> {{ message }}</div>
-	               {% endfor %}
-	               <br>
-	               {{ form.country.label }}
-		           {{ form.country }}
-		           {% for message in form.country.errors %}
-		                <div style="color:#FF0000"> {{ message }}</div>
-		           {% endfor %}
-		           <br>
-	               {{ form.normalizationMethod.label }}
-	               {{ form.normalizationMethod }}
-	               {% for message in form.normalizationMethod.errors %}
-	                        <div style="color:#FF0000"> {{ message }}</div>
-	               {% endfor %}
-	               <br>
-	               {{ form.minMaxSubmit }}
-	               <br>
-	        </div>
-	</form>
 	<div>
-		<h4>Indicators</h4>
-		<ul id="listOfIndicators">
-		</ul>
-		<p id="attributeDescription"></p>
-		<br>
-		<h4>Countries</h4>
-		<ul id="listOfCountries">
-		</ul>
+		<div>
+			<form action="/" method="post" value="minmax">
+				
+				    <div class="container-fluid" style = font-size:20px; font-weight:bold;>
+			               {{ form.attribute.label }}
+			               {{ form.attribute }}
+			               {% for message in form.attribute.errors %}
+			                        <div style="color:#FF0000"> {{ message }}</div>
+			               {% endfor %}
+				           <br>
+			               {{ form.normalizationMethod.label }}
+			               {{ form.normalizationMethod }}
+			               {% for message in form.normalizationMethod.errors %}
+			                        <div style="color:#FF0000"> {{ message }}</div>
+			               {% endfor %}
+			               <br>
+			               <input type="submit" name="minmax" value="Visualize Global Data">
+			        </div>
+			</form>
+		</div>
+		<div>
+			<h4>Indicators</h4>
+			<ul id="listOfIndicators">
+			</ul>
+			<p id="attributeDescription"></p>
+			<br>
+			<h4>Countries</h4>
+			<ul id="listOfCountries">
+			</ul>
+		</div>
+		<div>
+			<form action="/" method="post" value="correlation">
+				<div class="container-fluid" style = font-size:20px; font-weight:bold;>
+	               {{ form2.attribute2.label }}
+	               {{ form2.attribute2 }}
+	               {% for message in form2.attribute2.errors %}
+	                        <div style="color:#FF0000"> {{ message }}</div>
+	               {% endfor %}
+		           <br>
+		           {{ form2.country.label }}
+	               {{ form2.country }}
+	               {% for message in form2.country.errors %}
+	                        <div style="color:#FF0000"> {{ message }}</div>
+	               {% endfor %}
+	               <br>
+					<input type="submit" name="correlation" value="Calculate Correlations">
+				</div>
+			</form>
+		</div>
 	</div>
+	</body>
 	<script type="text/javascript">
 			
 

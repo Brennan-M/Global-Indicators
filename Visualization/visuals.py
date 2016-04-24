@@ -16,31 +16,47 @@ from find_correlation_data import CorrelatedIndicators
 app = Flask(__name__)
 
 
-class InDepthForm(Form):
+class MinMaxForm(Form):
    attribute = TextField("Attribute", [validators.Required("Please select an attribute to analyze.")])
-   country = TextField("Country", [validators.Required("Please select a country.")])
    normalizationMethod = SelectField("Normalization Option", choices=[('nby', "Normalize By Year"), ('nba', "Normalize By Aggregate")], validators=[validators.Required("Please select a normalization technique.")])
-   minMaxSubmit = SubmitField("Visualize Global Data")
+   # minMaxSubmit = SubmitField("Visualize Global Data")
+
+class CorrelationForm(Form):
+	attribute2 = TextField("Attribute", [validators.Required("Please select an attribute to analyze.")])
+	country = TextField("Country", [validators.Required("Please select a country.")])
+	correlationSubmit = SubmitField("Calculate Correlation Values")
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-	form = InDepthForm(request.form)
+	mmForm = MinMaxForm(request.form)
+	cForm = CorrelationForm(request.form)
+
    	rd = RetrieveData()
 	rd.getIndicators()
 	rd.getCountries()
-	if request.method == 'POST':
-		if form.validate() == True:
-			return min_max_view(request.form['attribute'], request.form['normalizationMethod'], rd.indicatorData[request.form['attribute']])
-		else:
-			return render_template('index.html', form = form, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
-	elif request.method == 'GET':
-		return render_template('index.html', form = form, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
 
+	if request.method == 'POST':
+		if mmForm.validate() and request.form['minmax'] == 'Visualize Global Data':
+			return min_max_view(request.form['attribute'], request.form['normalizationMethod'], rd.indicatorData[request.form['attribute']])
+		elif cForm.validate() and request.form['correlation'] == 'Calculate Correlations':
+			return correlation_view(request.form['attribute2'], request.form['country'], rd.indicatorData)
+		else:
+			return render_template('index.html', form2 = cForm, form = mmForm, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
+	elif request.method == 'GET':
+		return render_template('index.html', form2 = cForm, form = mmForm, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
+
+
+@app.route("/correlations", methods=["GET", "POST"])
+def correlation_view(attribute, country, indicatorData):
+	extraInfo = {"attr":attribute, "ctry":country}
+	ci = CorrelatedIndicators(attribute, country)
+	ci.calculateCorrelations()
+	return render_template("correlations.html", info=json.dumps(extraInfo), correlationData=json.dumps(ci.correlationValues), indicatorData=json.dumps(indicatorData))
 
 
 @app.route("/min_max", methods=["GET", "POST"])
-def min_max_view(attribute, normalizeMethod, definition):
+def min_max_view(attribute, normalizeMethod, indicatorData):
 
 		data = MinMax(attribute)
 		if normalizeMethod == "nby":

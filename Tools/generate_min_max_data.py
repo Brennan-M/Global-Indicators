@@ -1,5 +1,5 @@
 import sys
-sys.append()sys.path.append('../Util')
+sys.path.append('../Util')
 from database_reader import DatabaseReader
 import matrix_cleaning as Clean
 
