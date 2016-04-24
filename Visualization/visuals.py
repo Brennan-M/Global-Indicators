@@ -71,8 +71,6 @@ def min_max_view(attribute, normalizeMethod, definition, smoothingMethod):
 		return render_template("min_max.html", form = form, data=json.dumps(data.organizedInfo))
 
 
-
-
 def start():
 	app.secret_key = 'flask key'
 	app.run(host='0.0.0.0', port=3000, debug=True)
@@ -98,4 +96,3 @@ if __name__ == "__main__":
 				data.dbscan()
 			return render_template("cluster.html", data=json.dumps(data.clusterInfo))
 '''
-

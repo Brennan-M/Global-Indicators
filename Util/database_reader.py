@@ -161,7 +161,10 @@ class DatabaseReader(object):
             dateRange = (START_DATE, END_DATE), useCountryCode = True, \
             useInidcatorCode = True):
         if type(attribute) != str:
-            raise AttributeError("The attribute passed must be a string.")
+            if type(attribute) == unicode:
+                attribute = str(attribute)
+            else:
+                raise AttributeError("The attribute passed must be a string." + str(type(attribute)) + str(attribute))
 
         countryQueryComponent = "CountryCode" if useCountryCode \
                 else "CountryName"

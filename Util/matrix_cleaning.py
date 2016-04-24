@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.interpolate import interp1d
 
 """
 Author: Ian Char
@@ -9,6 +10,36 @@ Util functions for cleaning matrices.
 
 YEAR_DIC_VALUE = "Year"
 CONSTANT_DIC_VALUE = "Constant"
+INVLID_COUNTRY_COUDES = ["ADO", "ARB", "CSS", "CEB", "CHI", "CUW", "ZAR", "EAS", "EAP",
+		   "EMU", "ECS", "ECA", "EUU", "FCS", "HPC", "HIC", "NOC", "OEC", "IMY", "KSV",
+		   "LCN", "LAC", "LDC", "LMY", "LIC", "LMC", "MEA", "MNA", "MIC", "NAC", "OED",
+		   "OSS", "PSS", "ROM", "SXM", "SST", "SAS", "SSD", "SSF", "SSA", "TMP", "UMC",
+		   "WBG", "WLD"]
+
+"""
+Here we assume that the countries are on the rows of the Matrix. The Matrix
+and row dictionary will remain unchanged. THe new values will be returned.
+"""
+def removeInvalidCountries(mat, rowDic):
+    rows, cols = mat.shape
+    toRemove = []
+
+    for key, value in rowDic.items():
+        if value in INVLID_COUNTRY_COUDES:
+            toRemove.append(key)
+
+    newMat = np.asmatrix(np.empty((rows - len(toRemove), cols)))
+    newDic = {}
+
+    currRow = 0
+    for r in range(rows):
+        if r not in toRemove:
+            newMat[currRow, :] = mat[r, :]
+            newDic[currRow] = rowDic[r]
+            currRow += 1
+
+    return newMat, newDic
+
 
 """
 Takes a matrix and gives back a nested dictionary where the outer layer of
@@ -151,13 +182,12 @@ def findValidTimeRange(mat, colDic, nanUpperThreshold = 1.0):
             del colDic[key]
 
     # Readjust dic values
+	newDic = {}
     for c in range(cols):
         if c <= end - start:
-            colDic[c] = colDic[c + start]
-        else:
-            del colDic[c]
+            newDic[c] = colDic[c + start]
 
-    return mat[:, start:end + 1], colDic
+    return mat[:, start:end + 1], newDic
 """
 Transforms each column of the matrix to your specification. The function
 passed in should take a numpy column vector as an argument.
@@ -203,18 +233,59 @@ def smoothByAverage(vect):
         if np.isnan(vect[r]):
             vect[r] = valToReplace
 
+def smoothByInterpolation(vect):
+    toTrainX = []
+    toTrainY = []
+    toPredict = []
+    rows = vect.shape[0]
+
+    for r in range(rows):
+        if np.isnan(vect[r]):
+            toPredict.append(r)
+        else:
+            toTrainX.append(r)
+            toTrainY.append(vect[r])
+
+    if len(toTrainX) <= 3:
+        print "Not enough data to interpolate"
+        smoothByAverage(vect)
+        return
+
+    f = interp1d(toTrainX, toTrainY, kind='cubic')
+
+    for index in toPredict:
+        if index < toTrainX[0]:
+            vect[index] = toTrainY[0]
+        elif index > toTrainX[-1]:
+            vect[index] = toTrainY[-1]
+        else:
+            vect[index] = f(index)
+
 """ Normalizing functions """
 def normalizeByMinMax(vect):
     rows = vect.shape[0]
-    minimum, maximum = min(vect), max(vect)
+    minimum = float('inf')
+    maximum = float('-inf')
+    for r in range(rows):
+        if float(vect[r]) < minimum:
+            minimum = float(vect[r])
+        if float(vect[r]) > maximum:
+            maximum = float(vect[r])
     if maximum - minimum < 10 ** -8:
         for r in range(rows):
             if not np.isnan(vect[r]):
                 vect[r] = 0
     else:
+        countAdjust = 0
         for r in range(rows):
             if not np.isnan(vect[r]):
-                vect[r] = float(vect[r] - minimum)/(maximum - minimum)
+                toReplace = float(float(vect[r]) - minimum)/(maximum - minimum)
+                if toReplace > 1 or toReplace < 0:
+                    print "wtf...", int(vect[r]), minimum, maximum
+                else:
+                    vect[r] = toReplace
+                countAdjust += 1
+        print countAdjust, rows
 
 def normalizeByZScore(vect):
     rows = vect.shape[0]
@@ -232,6 +303,29 @@ def normalizeByZScore(vect):
         for r in range(rows):
             if not np.isnan(vect[r]):
                 vect[r] = float(vect[r] - mean)/sd
+
+# Unlike the other normalizing functions this is not to be used in conjuction
+# with transformColumns
+def normalizeByGlobalMinMax(mat):
+    rows, cols = mat.shape
+    minimum = float('inf')
+    maximum = float('-inf')
+
+    # Find the minimum and maximum
+    for r in range(rows):
+        for c in range(cols):
+            if mat[r, c] < minimum:
+                minimum = mat[r, c]
+            if mat[r, c] > maximum:
+                maximum = mat[r, c]
+
+    # Normalize all elements
+    for r in range(rows):
+        for c in range(cols):
+            toDivide = maximum if maximum == minimum else maximum - minimum
+            mat[r, c] = (mat[r, c] - minimum)/float(toDivide)
+    return mat
+
 
 def testBasics():
     testMat = np.matrix([[np.NAN, 2, 3, 4],
@@ -256,10 +350,14 @@ def testBasics():
     print transformColumns(np.copy(testMat), smoothByReplacement(0))
     print "----------- smoothByAverage ------------------"
     print transformColumns(np.copy(testMat), smoothByAverage)
+    print "----------- smoothByInterpolation ------------------"
+    print transformColumns(np.copy(testMat), smoothByInterpolation)
     print "----------- normalizeByMinMax----------------"
     print transformColumns(np.copy(testMat), normalizeByMinMax)
     print "----------- normalizeByZScore ---------------"
     print transformColumns(np.copy(testMat), normalizeByZScore)
+    print "----------- normalizeByGlobalMinMax ---------------"
+    print normalizeByGlobalMinMax(np.copy(testMat))
 
 def testTransformToDictionary():
     testMat = np.matrix([[np.NAN, 2, 3, 4],
