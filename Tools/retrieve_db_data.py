@@ -17,11 +17,13 @@ class RetrieveData(object):
 	def __del__(self):
 		self.conn.close()
 
+
 	def writeIndicators(self):
 		for row in self.c.execute("SELECT DISTINCT IndicatorCode, IndicatorName FROM Indicators"):
 			self.indicatorData[row[0]] = row[1]
 		with open('Indicators.json', 'w') as outfile:
 			json.dump(self.indicatorData, outfile)
+
 
 	def getIndicators(self):
 		# This line was simply copied and pasted from the outfile from writeIndicators...

@@ -4,32 +4,34 @@
 	<head>
 		<style>
 			ul { 
-				height:500px;
+				height:400px;
 				overflow:hidden;
 				overflow-y:scroll;
 			}
+			.wrapper2{
+				width:95%;
+				margin-top: 5%;
+			}
 			.wrapper{
 			   width: 95%;
-			   border: 1px solid red;
 			}
 			.one, .two, .three{
 			   display:block;
 			   width:33%;
-			   border: 1px solid green;
 			   box-sizing: border-box;
 			}
-			.one{
+			.one {
 			   float:left;
 			}
-			.two{
+			.two {
 			   margin:0 auto;
 			}
-			.three{
+			.three {
 			   float:right;
 			}
 			.listOne, .listTwo{
 				display:block;
-				width:30%;
+				width:33%;
 				box-sizing: border-box;
 			}
 
@@ -82,39 +84,22 @@
 					<input type="submit" name="correlation" value="Calculate Correlations">
 				</div>
 			</form>
-		</div>
-		<div class="three">
-			<form action="/" method="post" value="correlation">
-				<div class="container-fluid" style = font-size:20px; font-weight:bold;>
-	               {{ form2.attribute2.label }}
-	               {{ form2.attribute2 }}
-	               {% for message in form2.attribute2.errors %}
-	                        <div style="color:#FF0000"> {{ message }}</div>
-	               {% endfor %}
-		           <br>
-		           {{ form2.country.label }}
-	               {{ form2.country }}
-	               {% for message in form2.country.errors %}
-	                        <div style="color:#FF0000"> {{ message }}</div>
-	               {% endfor %}
-	               <br>
-					<input type="submit" name="correlation" value="Calculate Correlations">
-				</div>
-			</form>
-		</div>
+		</div> 
 	</div>
+
 		<br>
-		<div class="wrapper">
-			<div class="listOne">
+		<div>
+			<div class="one">
 				<div class="container-fluid">
 				<br>
 				<h4>Indicators</h4>
 				<ul id="listOfIndicators">
 				</ul>
 				<p id="attributeDescription"></p>
+				<br>
 				</div>
 			</div>
-			<div class="listTwo">
+			<div class="three">
 				<div class="container-fluid">
 				<br>
 				<h4>Countries</h4>
@@ -122,6 +107,41 @@
 				</ul>
 				</div>
 			</div>
+		</div>
+		<br>
+		<br>
+		<div class="wrapper">
+			<div class="one">
+			<form action="/" method="post" value="cluster">
+				<div class="container-fluid" style = font-size:20px; font-weight:bold;>
+	               {{ form3.attributes.label }}
+	               {{ form3.attributes }}
+	               {% for message in form3.attributes.errors %}
+	                        <div style="color:#FF0000"> {{ message }}</div>
+	               {% endfor %}
+	               <br>
+	               {{ form3.clusterTechnique.label }}
+	               {{ form3.clusterTechnique }}
+	               {% for message in form3.clusterTechnique.errors %}
+	                        <div style="color:#FF0000"> {{ message }}</div>
+	               {% endfor %}
+	               <br>
+	               {{ form3.kvalue.label }}
+	               {{ form3.kvalue }}
+	               {% for message in form3.kvalue.errors %}
+	                        <div style="color:#FF0000"> {{ message }}</div>
+	               {% endfor %}
+	               <br>
+	               {{ form3.year.label }}
+	               {{ form3.year }}
+	               {% for message in form3.year.errors %}
+	                        <div style="color:#FF0000"> {{ message }}</div>
+	               {% endfor %}
+	               <br>
+				<input type="submit" name="cluster" value="Cluster">
+				</div>
+			</form>
+		</div>
 		</div>
 	</body>
 	<script type="text/javascript">

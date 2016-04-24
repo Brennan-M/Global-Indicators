@@ -16,12 +16,10 @@ from database_reader import DatabaseReader
 import matrix_cleaning
 
 class Cluster(object):
-	def __init__(self, year, attributes, k=5, normalizeMethod=0):
+	def __init__(self, attributes, k, year, clusterTechnique):
 		self.k = k # For k-means, the number of clusters (not used in DBSCAN)
 		self.year = year # Indicated year for the attributes we are clustering on
 		self.attributes = attributes # List of attributes to cluster on
-		self.normalizeMethod = normalizeMethod # Method used to normalize the data before clustering
-			# 0: ZScore, 1: MinMax, 2: Average
 		self.Clusters = None # Instance of indiciated clustering method, used to fit (cluster) data
 		self.clusterIndex = None # Index of the cluster that data point belongs to
 		self.centers = [] # List of centers of kmeans clusters
@@ -34,14 +32,17 @@ class Cluster(object):
 			# This is the dictionary needed for visuals
 
 		self.getData()
+		if (clusterTechnique == "spectral"):
+			self.spectral()
+		elif (clusterTechnique == "kmeans"):
+			self.kmeans()
+
 
 	def getData(self):
 		db = DatabaseReader()
 		self.values, self.countries, self.col = db.fetchAttributesData(self.attributes,self.year)
 
-		# Replacing NaN values
-		# Can we smooth by interpolation instead possibly?
-		matrix_cleaning.transformColumns(self.values, matrix_cleaning.smoothByReplacement(0))
+		matrix_cleaning.transformColumns(self.values, matrix_cleaning.smoothByAverage)
 
 
 		# No Need to normalize I dont think?
@@ -78,22 +79,22 @@ class Cluster(object):
 		# Put the results into a dictionary for JSON output
 		countryValues = {}
 		for i in range(0,len(self.clusterIndex)):
-			countryValues.update({self.countries[i]:self.clusterIndex[i]})
-		self.clusterData.update({self.year:countryValues})
+			countryValues[self.countries[i]] = int(self.clusterIndex[i])
+		self.clusterData[self.year] = countryValues
 
-
+'''
 if __name__ == "__main__":
-  	cluster = Cluster(2014, ["AG.LND.TOTL.K2","NY.GDP.MKTP.CD"], 2) #NY.GDP.MKTP.KD.ZG - GDP growth rate, NY.GDP.MKTP.CD - GDP
+  	cluster = Cluster(["AG.LND.TOTL.K2","NY.GDP.MKTP.CD"], 10, 2014, "spectral") #NY.GDP.MKTP.KD.ZG - GDP growth rate, NY.GDP.MKTP.CD - GDP
   		#SG.VAW.ARGU.ZS - % women who think their husband is justified in beating her when she argues with him
   		#AG.LND.TOTL.K2  - land area in sq. km
   	# print cluster.values
   	# cluster.kmeans()
 	# cluster.dbscan()
-  	cluster.spectral()
+  	# cluster.spectral()
   	# print cluster.countries
   	# print cluster.values
   	# print cluster.clusters
   	# print cluster.centers
   	print cluster.clusterData
-
+'''
 

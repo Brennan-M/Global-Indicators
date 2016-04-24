@@ -24,17 +24,18 @@ class MinMaxForm(Form):
 class CorrelationForm(Form):
 	attribute2 = TextField("Attribute Code", [validators.Required("Please select an attribute to analyze.")])
 	country = TextField("Country", [validators.Required("Please select a country.")])
-	correlationSubmit = SubmitField("Calculate Correlation Values")
 
 class ClusterForm(Form):
 	attributes = TextField("Attributes, Comma Separated", [validators.Required("Please select attributes to analyze, at least 2.")])
-
+	clusterTechnique = SelectField("Cluster Technique", choices=[('spectral', "Spectral"), ('kmeans', "K-Means")])
+	kvalue = IntegerField("Cluster Count", [validators.Required("Please specify a k-count.")])
+	year = IntegerField("Year", [validators.Required("Please specify a year.")])
 
 @app.route("/", methods=["GET", "POST"])
 def index():
 	mmForm = MinMaxForm(request.form)
 	cForm = CorrelationForm(request.form)
-
+	clusterForm = ClusterForm(request.form)
    	rd = RetrieveData()
 	rd.getIndicators()
 	rd.getCountries()
@@ -44,10 +45,21 @@ def index():
 			return min_max_view(request.form['attribute'], request.form['normalizationMethod'], rd.indicatorData[request.form['attribute']], request.form['smoothingMethod'])
 		elif cForm.validate() and request.form['correlation'] == 'Calculate Correlations':
 			return correlation_view(request.form['attribute2'], request.form['country'], rd.indicatorData)
+		elif clusterForm.validate() and request.form['cluster'] == 'Cluster':
+			return cluster_view(request.form['attributes'], request.form['kvalue'], request.form['clusterTechnique'], request.form['year'])
 		else:
-			return render_template('index.html', form2 = cForm, form = mmForm, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
+			return render_template('index.html', form3 = clusterForm, form2 = cForm, form = mmForm, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
 	elif request.method == 'GET':
-		return render_template('index.html', form2 = cForm, form = mmForm, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
+		return render_template('index.html', form3 = clusterForm, form2 = cForm, form = mmForm, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
+
+
+@app.route("/cluster", methods=["GET", "POST"])
+def cluster_view(attributes, kvalue, clusterTechnique, year):
+
+	attributeList = attributes.split(",")
+	cluster = Cluster(attributeList, int(kvalue), int(year), clusterTechnique)
+	#print cluster.clusterData
+	return render_template("cluster.html", clusterData=json.dumps(cluster.clusterData))
 
 
 @app.route("/correlations", methods=["GET", "POST"])
@@ -66,12 +78,6 @@ def min_max_view(attribute, normalizeMethod, definition, smoothingMethod):
     data['attributeAnalyzed'] = definition
 
     return render_template("min_max.html", form = form, data=json.dumps(data))
-
-@app.route("/cluster", methods=["GET", "POST"])
-def cluster_view(yearOptions, attributes, kvalue):
-	#clusterData = Cluster("2012", 5, attributes)
-
-	return render_template("cluster.html")
 
 
 def start():
