@@ -1,183 +1,96 @@
-'''for a single attribute and year, generate k clusters for all the countries'''
+'''
+Author: Emma Montross
 
+For a single year, cluster on two or more attributes
+using KMeans, DBSCAN, or Spectral clustering.
+Output a dictionary of country codes associated with the
+index of the cluster to which that country belongs.
+'''
+import sys
 import sqlite3
-from sklearn.cluster import KMeans
-from sklearn.cluster import DBSCAN
+import numpy as np
+from sklearn.cluster import KMeans, DBSCAN, SpectralClustering
+
+sys.path.append('../Util')
+from database_reader import DatabaseReader
+import matrix_cleaning
 
 DB_PATH = '../Data/world-development-indicators/database.sqlite'
 
 class Cluster(object):
-	def __init__(self, k, year, attribute, path=DB_PATH):
-		self.k = k # for k-means, ths number of clusters (not used in DBSCAN)
-		self.year = year
-		self.attribute = attribute
-		self.kMeansClusters = None
-		self.DBSCANClusters = None
-		self.centers = [] 
-		self.clusters = None #index of the cluster that data point belongs to
+	def __init__(self, year, attributes, k=5, normalizeMethod=0, path=DB_PATH):
+		self.k = k # For k-means, the number of clusters (not used in DBSCAN)
+		self.year = year # Indicated year for the attributes we are clustering on
+		self.attributes = attributes # List of attributes to cluster on
+		self.normalizeMethod = normalizeMethod # Method used to normalize the data before clustering
+			# 0: ZScore, 1: MinMax, 2: Average
+		self.Clusters = None # Instance of indiciated clustering method, used to fit (cluster) data
+		self.clusterIndex = None # Index of the cluster that data point belongs to
+		self.centers = [] # List of centers of kmeans clusters
 
-		self.values = [] # 2D array of the year and corresponding data point (all the years will be the same)
-		self.countries = [] #list of country codes in same order of self.values (for putting together dictionary at the end)
+		self.values = None # Matrix of values to cluster on (rows are countries, columns are attributes)
+		self.countries = None # Dictionary that maps cluster indexes to country codes
+		self.col = None # Column dictionary (??)
 
-		self.conn = sqlite3.connect(path, check_same_thread = False)
-		self.conn.text_factory = str
-		self.c = self.conn.cursor()
-
-		self.countryCodes = {}
-		self.countryInfo = {} # In format { CountryCode: {Year:Value, Year:Value, etc}, CountryCode: ... }
 		self.organizedInfo = {} # In format { Year: {country:value, country:value, etc}, Year: ... }
-		self.clusterInfo = {} # In format { CountryCode: cluster index, CountryCode: cluster index ... }
-		self.generateData()
+			# This is the dictionary needed for visuals
+			
+		self.getData()
 
-	# credit for del, generateData, normalizeData, and normalizeDataByYear
-	# goes out to the homie Brennan
-	def __del__(self):
-		self.conn.close()
+	def getData(self):
+		db = DatabaseReader()
+		self.values, self.countries, self.col = db.fetchAttributesData(self.attributes,self.year)
 
-	def generateData(self):
+		# Replacing NaN values
+		matrix_cleaning.transformColumns(self.values,matrix_cleaning.smoothByReplacement(0))
 
-		# ccodesList = []
-		# with open("ccodes.txt") as f:
-		# 	for line in f:
-		# 		ccodesList.append(line[:-1])
+		# Normalizing the values
+		if (self.normalizeMethod == 0):
+			matrix_cleaning.transformColumns(self.values,matrix_cleaning.normalizeByZScore)
+		elif(self.normalizeMethod == 1):
+			matrix_cleaning.transformColumns(self.values,matrix_cleaning.normalizeByMinMax)
+		elif(self.normalizeMethod == 2):
+			matrix_cleaning.transformColumns(self.values,matrix_cleaning.normalizeByAverage)
 
-		#codes of countries with incomplete data or that do not exist anymore
-		invalidCcodes = ["ADO", "ARB", "CSS", "CEB", "CHI", "CUW", "ZAR", "EAS", "EAP",
-		   "EMU", "ECS", "ECA", "EUU", "FCS", "HPC", "HIC", "NOC", "OEC", "IMY", "KSV",
-		   "LCN", "LAC", "LDC", "LMY", "LIC", "LMC", "MEA", "MNA", "MIC", "NAC", "OED",
-		   "OSS", "PSS", "ROM", "SXM", "SST", "SAS", "SSD", "SSF", "SSA", "TMP", "UMC",
-		   "WBG", "WLD"]
-
-
-		for row in self.c.execute("SELECT CountryCode, TableName FROM Country"):
-			if row[0] in invalidCcodes:
-				continue
-			self.countryCodes.update({row[1]:row[0]})
-
-
-		for country, ccode in self.countryCodes.items():
-			countryValues = {}
-			for row in self.c.execute("SELECT Year, Value FROM Indicators WHERE IndicatorCode=? AND CountryName=?", (self.attribute, country)):
-				countryValues.update({int(row[0]):float(row[1])})
-
-			self.countryInfo.update({self.countryCodes[country]:countryValues})
-
-
-	def normalizeData(self):
-
-		minimum = float("inf")
-		maximum = float("-inf")
-		minYear = float("inf")
-		maxYear = float("-inf")
-
-		for obj in self.countryInfo.values():
-			for year, value in obj.items():
-				if value < minimum:
-					minimum = value
-				if value > maximum:
-					maximum = value
-				if year < minYear:
-					minYear = year
-				if year > maxYear:
-					maxYear = year 
-
-		# This Code Normalizes the values
-		for obj in self.countryInfo.values():
-			for year, value in obj.items():
-				normalizedValue = (value - minimum) / (maximum - minimum)
-				obj[year] = normalizedValue
-
-		for year in range(minYear, maxYear+1):
-			newData = {}
-			for ccode in self.countryInfo.keys():
-				obj = self.countryInfo[ccode]
-				if obj.has_key(year):
-					newData[ccode] = obj[year]
-				else:
-					newData[ccode] = 0
-
-			self.organizedInfo[year] = newData
-		self.getValues()
-
-	def normalizeDataByYear(self):
-
-		minYear = float("inf")
-		maxYear = float("-inf")
-		
-		for obj in self.countryInfo.values(): 
-			for year in obj.keys():
-				if year < minYear:
-					minYear = year
-				if year > maxYear:
-					maxYear = year
-		
-		for year in range(minYear, maxYear+1):
-			newData = {}
-			for ccode in self.countryInfo.keys():
-				obj = self.countryInfo[ccode]
-				if obj.has_key(year):
-					newData[ccode] = obj[year]
-				else:
-					newData[ccode] = 0
-
-			self.organizedInfo[year] = newData
-
-
-		# This Code Normalizes the values
-		for year, obj in self.organizedInfo.items():
-
-			localMin = float("inf")
-			localMax = float("-inf")
-
-			for value in obj.values():
-				if value < localMin:
-					localMin = value
-				if value > localMax:
-					localMax = value
-
-			for country, value in obj.items():
-				normalizedValue = (value - localMin) / (localMax - localMin)
-				obj[country] = normalizedValue
-		self.getValues()
-
-	def getValues(self):
-		yearInfo = self.organizedInfo[self.year]
-		for key in yearInfo:
-			self.values.append([self.year,yearInfo[key]])
-			self.countries.append(key)
 
 	def kmeans(self):
 		# K-Means Clustering
-		self.kMeansClusters = KMeans(n_clusters=self.k,init='k-means++')
-		self.clusters = self.kMeansClusters.fit_predict(self.values)
-		self.centers = self.kMeansClusters.cluster_centers_
-		self.dict()
+		self.Clusters = KMeans(n_clusters=self.k,init='k-means++')
+		self.clusterIndex = self.Clusters.fit_predict(self.values)
+		self.centers = self.Clusters.cluster_centers_
+		self.output()
 
 	def dbscan(self):
-		# DBSCAN Clustering - currently does not work, giving it the wrong form of data
-		self.DBSCANClusters = DBSCAN()
-		self.clusters = self.DBSCANClusters.fit_predict(self.values)
+		# DBSCAN Clustering
+		self.Clusters = DBSCAN(eps=0.3)
+		self.clusterIndex = self.Clusters.fit_predict(self.values)
 		#self.centers = self.DBSCANClusters.core_sample_indices_
-		self.dict()
+		self.output()
 
-	def dict(self):
-		# putting the results into a  (for JSON output
-		for i in range(0,len(self.countries)):
-			country = self.countries[i]
-			cnum = self.clusters[i]
-			self.clusterInfo[country] = cnum
+	def spectral(self):
+		# Spectral Clustering
+		self.Clusters = SpectralClustering(n_clusters=self.k, affinity='nearest_neighbors')
+		self.clusterIndex = self.Clusters.fit_predict(self.values)
+		self.output()
+
+	def output(self):
+		# Put the results into a dictionary for JSON output
+		countryValues = {}
+		for i in range(0,len(self.clusterIndex)):
+			countryValues.update({self.countries[i]:self.clusterIndex[i]})
+		self.organizedInfo.update({self.year:countryValues})
 
 
-if __name__ == "__main__":
-  	cluster = Cluster(10, 2014, "AG.LND.TOTL.K2") #NY.GDP.MKTP.KD.ZG - GDP growth rate, NY.GDP.MKTP.CD - GDP
-  		#SG.VAW.ARGU.ZS - % women who think their husband is justified in beating her when she argues with him
-  		#AG.LND.TOTL.K2  - land area in sq. km
-  	cluster.normalizeDataByYear()
-  	#cluster.normalizeData()
-  	cluster.kmeans()
-  	#cluster.dbscan()
-  	# print cluster.countries
-  	# print cluster.values
-  	# print cluster.clusters
-  	# print cluster.centers
-  	print cluster.clusterInfo
+# if __name__ == "__main__":
+#   	cluster = Cluster(2014, ["AG.LND.TOTL.K2","NY.GDP.MKTP.CD"], 10) #NY.GDP.MKTP.KD.ZG - GDP growth rate, NY.GDP.MKTP.CD - GDP
+#   		#SG.VAW.ARGU.ZS - % women who think their husband is justified in beating her when she argues with him
+#   		#AG.LND.TOTL.K2  - land area in sq. km
+#   	# print cluster.values
+#   	# cluster.kmeans()
+#   	# cluster.dbscan()
+#   	cluster.spectral()
+#   	# print cluster.countries
+#   	# print cluster.values
+#   	# print cluster.clusters
+#   	# print cluster.centers
+#   	print cluster.organizedInfo
