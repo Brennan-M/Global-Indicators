@@ -1,3 +1,8 @@
+import sys
+sys.append()sys.path.append('../Util')
+from database_reader import DatabaseReader
+import matrix_cleaning as Clean
+
 import sqlite3
 
 DB_PATH = '../Data/world-development-indicators/database.sqlite'
@@ -62,7 +67,7 @@ class MinMax(object):
 				if year < minYear:
 					minYear = year
 				if year > maxYear:
-					maxYear = year 
+					maxYear = year
 
 		# This Code Normalizes the values
 		for obj in self.countryInfo.values():
@@ -85,14 +90,14 @@ class MinMax(object):
 
 		minYear = float("inf")
 		maxYear = float("-inf")
-		
-		for obj in self.countryInfo.values(): 
+
+		for obj in self.countryInfo.values():
 			for year in obj.keys():
 				if year < minYear:
 					minYear = year
 				if year > maxYear:
 					maxYear = year
-		
+
 		for year in range(minYear, maxYear+1):
 			newData = {}
 			for ccode in self.countryInfo.keys():

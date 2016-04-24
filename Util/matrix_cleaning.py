@@ -10,6 +10,22 @@ Util functions for cleaning matrices.
 YEAR_DIC_VALUE = "Year"
 CONSTANT_DIC_VALUE = "Constant"
 
+"""
+Takes a matrix and gives back a nested dictionary where the outer layer of
+the dictionary is indexed by the rows and the inner dictionaries are indexed
+by the columns
+"""
+def transformToDictionary(mat, rowDic, colDic):
+    numRows, numCols = mat.shape
+    toReturn = {}
+
+    for r in range(numRows):
+        innerDic = {}
+        for c in range(numCols):
+            innerDic[colDic[c]] = mat[r, c]
+        toReturn[rowDic[r]] = innerDic
+
+    return toReturn
 
 """
 Add a column to the end of the matrix the value to be added can be a range
@@ -17,7 +33,7 @@ of numbers represented as a tuple (inclusive), or a single number. This will
 make a shallow copy of the matrix but alter the dictionary given. Returns new
 matrix and altered dictionary.
 """
-def addColumn(mat, dic, colName, value):
+def addColumn(mat, colDic, colName, value):
     rows, cols = mat.shape
     toFill = []
     if isinstance(value, tuple):
@@ -32,9 +48,9 @@ def addColumn(mat, dic, colName, value):
     for elemNum, elem in enumerate(toFill):
         newMat[elemNum, cols] = elem
 
-    dic[cols] = colName
+    colDic[cols] = colName
 
-    return newMat, dic
+    return newMat, colDic
 
 
 """
@@ -42,12 +58,12 @@ Splits the given name of the attribute off from the matrix and returns it as a
 vector. Returns a new matrix (old one not altered), new dict (old one not
 altered), and the vector of the attribute.
 """
-def splitOffAttr(mat, dic, attribute):
+def splitOffAttr(mat, colDic, attribute):
     rows, cols = mat.shape
 
     # Find index in matrix corresponding to attribute
     attrIndex = -1
-    for key, val in dic.items():
+    for key, val in colDic.items():
         if attribute == val:
             attrIndex = key
             break
@@ -62,7 +78,7 @@ def splitOffAttr(mat, dic, attribute):
     newMat[:,attrIndex:] = mat[:, (attrIndex + 1):]
 
     newDic = {}
-    for key, val in dic.items():
+    for key, val in colDic.items():
         if key != attrIndex:
             newDic[key if key < attrIndex else key - 1] = val
 
@@ -76,7 +92,7 @@ overall values.
 
 Returns an updated matrix and an updated dictionary
 """
-def removeSparseAttributes(mat, dic, tolerance = 0.8):
+def removeSparseAttributes(mat, colDic, tolerance = 0.8):
     rows, cols = mat.shape
 
     # Find which attributes meet the minimum threshold
@@ -95,11 +111,53 @@ def removeSparseAttributes(mat, dic, tolerance = 0.8):
     currCol = 0
     for c in colsToInclude:
         newMat[:,currCol] = mat[:, c]
-        newDic[currCol] = dic[c]
+        newDic[currCol] = colDic[c]
         currCol += 1
 
     return newMat, newDic
 
+"""
+Cuts off consecutive columns that have a certain amount of non-nans. We assume
+here that the years are on the columns.
+"""
+def findValidTimeRange(mat, colDic, nanUpperThreshold = 1.0):
+    rows, cols = mat.shape
+    start = 0
+    end = cols - 1
+    accFunc = accFunc = lambda prev, curr: 1 + prev if np.isnan(curr) else prev
+
+    # Find a good start
+    nanAmount = 1.0
+    while nanAmount >= nanUpperThreshold:
+        nanAmount = reduce(accFunc, mat[:, start], 0)/float(rows)
+        if nanAmount >= nanUpperThreshold:
+            start += 1
+
+    # Find a good end
+    nanAmount = 1.0
+    while nanAmount > nanUpperThreshold:
+        nanAmount = reduce(accFunc, mat[:, end], 0)/float(rows)
+        if nanAmount >= nanUpperThreshold:
+            end -= 1
+
+    if start > end:
+        print "No valid time range could be found for the data!", start, end
+        return np.matrix([[np.NAN]]), {}
+
+    # fit mat and dict to this range
+    validRange = range(start, end + 1)
+    for key in colDic.keys():
+        if key not in validRange:
+            del colDic[key]
+
+    # Readjust dic values
+    for c in range(cols):
+        if c <= end - start:
+            colDic[c] = colDic[c + start]
+        else:
+            del colDic[c]
+
+    return mat[:, start:end + 1], colDic
 """
 Transforms each column of the matrix to your specification. The function
 passed in should take a numpy column vector as an argument.
@@ -175,8 +233,7 @@ def normalizeByZScore(vect):
             if not np.isnan(vect[r]):
                 vect[r] = float(vect[r] - mean)/sd
 
-
-if __name__ == '__main__':
+def testBasics():
     testMat = np.matrix([[np.NAN, 2, 3, 4],
                         [np.NAN, 2, 8, 3],
                         [np.NAN, np.NAN, 5, 5],
@@ -186,6 +243,8 @@ if __name__ == '__main__':
     print "----------- Test Matrix -----------"
     print testMat
     print testDict
+    print "-------------findValidTimeRange--------------"
+    print findValidTimeRange(np.copy(testMat), dict(testDict))
     print "------------addColumn--------------"
     print addColumn(testMat, dict(testDict), YEAR_DIC_VALUE, (17, 21))
     print addColumn(testMat, dict(testDict), CONSTANT_DIC_VALUE, 8)
@@ -201,3 +260,17 @@ if __name__ == '__main__':
     print transformColumns(np.copy(testMat), normalizeByMinMax)
     print "----------- normalizeByZScore ---------------"
     print transformColumns(np.copy(testMat), normalizeByZScore)
+
+def testTransformToDictionary():
+    testMat = np.matrix([[np.NAN, 2, 3, 4],
+                        [np.NAN, 2, 8, 3],
+                        [np.NAN, np.NAN, 5, 5],
+                        [np.NAN, np.NAN, 2, 3],
+                        [np.NAN, 2, np.NAN, 5]])
+    rowDic = {0:"V", 1:"W", 2:"X", 3:"Y", 4:"Z"}
+    colDic = {0:"A", 1:"B", 2:"C", 3:"D"}
+    print transformToDictionary(testMat, rowDic, colDic)
+
+if __name__ == '__main__':
+    testBasics()
+    testTransformToDictionary()

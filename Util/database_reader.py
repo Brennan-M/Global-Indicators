@@ -39,11 +39,16 @@ class DatabaseReader(object):
     functions in Matrix_Cleaning.py
     """
     def fetchCountryData(self, countryName, dateRange = (START_DATE, END_DATE),
-            asNumpyMatrix = True):
+            asNumpyMatrix = True, useCountryCode = True, useInidcatorCode = True):
         # Figure out how big the matrix needs to be
-        query = "SELECT COUNT(DISTINCT IndicatorName)" \
+        countryQueryComponent = "CountryCode" if useCountryCode \
+                else "CountryName"
+        indicatorQueryComponent = "IndicatorCode" if useInidcatorCode \
+                else "IndicatorName"
+
+        query = "SELECT COUNT(DISTINCT " + indicatorQueryComponent + ")" \
                 + " FROM Indicators" \
-                + " WHERE CountryName = \"" + countryName + "\"" \
+                + " WHERE " + countryQueryComponent + " = \"" + countryName + "\"" \
                 + " AND Year >= " + str(dateRange[0]) \
                 + " AND Year <= " + str(dateRange[1])
 
@@ -84,9 +89,20 @@ class DatabaseReader(object):
 
         return dataMatrix, colDictionary, attributeCodeDictionary
 
-    def fetchAttributesData(self, attributes, year):
+    """
+    Get a number of attributes for a specific year. Here, the countries are on
+    the rows, and the attributes are on the columns. This will return a numpy
+    matrix, a row dictionary (maps indexes to country name), and a col dictionary
+    """
+    def fetchAttributesData(self, attributes, year, useCountryCode = True, \
+            useInidcatorCode = True):
         if type(attributes) != list:
             raise AttributeError("attributes must be a list")
+
+        countryQueryComponent = "CountryCode" if useCountryCode \
+                else "CountryName"
+        indicatorQueryComponent = "IndicatorCode" if useInidcatorCode \
+                else "IndicatorName"
 
         numCountries = self.countNumberCountries()
         mat = np.asmatrix(np.empty((numCountries, len(attributes))))
@@ -98,9 +114,9 @@ class DatabaseReader(object):
         for col, attr in enumerate(attributes):
             colDic[attr] = col
 
-            query = "SELECT CountryName, Value" \
+            query = "SELECT " + countryQueryComponent + ", Value" \
                     + " FROM Indicators" \
-                    + " WHERE IndicatorName = \"" + attr + "\"" \
+                    + " WHERE " + indicatorQueryComponent + " = \"" + attr + "\"" \
                     + " AND YEAR = " + str(year) + ";"
 
             for row in self.cursor.execute(query):
@@ -123,7 +139,11 @@ class DatabaseReader(object):
 
         # Inverse row and column dictionaries
         # courtesy of http://stackoverflow.com/questions/483666/python-reverse-inverse-a-mapping
-        highestOccupiedRow = max(rowDic.values())
+        try:
+            highestOccupiedRow = max(rowDic.values())
+        except ValueError:
+            print "No data was found for your request"
+            return np.matrix([[np.NAN]]), {}, {}
         rowDic = {v: k for k, v in rowDic.items()}
         colDic = {v: k for k, v in colDic.items()}
 
@@ -132,12 +152,73 @@ class DatabaseReader(object):
         # for room in the matrix starting at the bottom
         return mat[:highestOccupiedRow + 1,:], rowDic, colDic
 
+
+    """
+    Constructs a matrix for a single attribute over several different years for
+    all countries. In the matrix each row is a country and each column is a year
+    """
+    def fetchAttributeOverTimeData(self, attribute, \
+            dateRange = (START_DATE, END_DATE), useCountryCode = True, \
+            useInidcatorCode = True):
+        if type(attribute) != str:
+            raise AttributeError("The attribute passed must be a string.")
+
+        countryQueryComponent = "CountryCode" if useCountryCode \
+                else "CountryName"
+        indicatorQueryComponent = "IndicatorCode" if useInidcatorCode \
+                else "IndicatorName"
+
+        numCountries = self.countNumberCountries()
+        mat = np.asmatrix(np.empty((numCountries, dateRange[1] - dateRange[0] + 1)))
+        mat[:] = np.NAN
+        rowDic = {} # Rows represent countries
+        colDic = {} # Columns represent years
+
+        # Fill in colDic
+        for col, year in enumerate(range(dateRange[0], dateRange[1] + 1)):
+            colDic[col] = year
+
+        query = "SELECT " + countryQueryComponent + ", Year, Value" \
+                + " FROM Indicators" \
+                + " WHERE " + indicatorQueryComponent + " = \"" + attribute + "\"" \
+                + " AND Year >= " + str(dateRange[0]) \
+                + " AND Year <= " + str(dateRange[1]) + ";"
+
+        for row in self.cursor.execute(query):
+            currCountry = row[0]
+            currYear = row[1]
+            currVal = row[2]
+
+            if currCountry in rowDic.keys():
+                mat[rowDic[currCountry], currYear - dateRange[0]] = currVal
+            else:
+                foundRow = False
+                for potentialRow in range(numCountries):
+                    if potentialRow not in rowDic.values():
+                        rowDic[currCountry] = potentialRow
+                        mat[potentialRow, currYear - dateRange[0]] = currVal
+                        foundRow = True
+                        break
+                if not foundRow:
+                    raise RuntimeError("Something went wronge while" \
+                            + " forming the matrix hmm...")
+
+        #Inverse row dictionary
+        try:
+            highestOccupiedRow = max(rowDic.values())
+        except ValueError:
+            print "No data was found for your request"
+            return np.matrix([[np.NAN]]), {}, {}
+        rowDic = {v: k for k, v in rowDic.items()}
+
+        return mat[:highestOccupiedRow + 1,:], rowDic, colDic
+
+
     def countNumberCountries(self):
         query = "SELECT COUNT(DISTINCT CountryCode)" \
                 + " FROM Country;"
         for row in self.cursor.execute(query):
             return int(row[0])
-
 
 
 def testFetchcountryData(db):
@@ -149,10 +230,16 @@ def testCountNumberCountries(db):
     print db.countNumberCountries()
 
 def testFetchAttributeData(db):
-    attrs = ["Access to electricity (% of population)",  \
-            "Access to non-solid fuel (% of population)", \
-            "Adequacy of social insurance programs (% of total welfare of beneficiary households)"]
+    attrs = ["AG.CON.FERT.ZS",  \
+            "AG.LND.AGRI.ZS", \
+            "AG.LND.CROP.ZS"]
     mat, rows, cols = db.fetchAttributesData(attrs, 2000)
+    print mat, rows, cols
+    print mat.shape
+
+def testFetchAttributeOverTimeData(db):
+    attr = "AG.LND.CREL.HA"
+    mat, rows, cols = db.fetchAttributeOverTimeData(attr)
     print mat, rows, cols
     print mat.shape
 
