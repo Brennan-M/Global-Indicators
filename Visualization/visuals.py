@@ -18,7 +18,7 @@ app = Flask(__name__)
 
 class MinMaxForm(Form):
    attribute = TextField("Attribute Code", [validators.Required("Please select an attribute to analyze.")])
-   normalizationMethod = SelectField("Normalization Option", choices=[('nby', "Normalize By Year"), ('nba', "Normalize By Aggregate")], validators=[validators.Required("Please select a normalization technique.")])
+   normalizationMethod = SelectField("Normalization Option", choices=[('min-max', "Normalize By Year"), ('global-min-max', "Normalize By Aggregate")], validators=[validators.Required("Please select a normalization technique.")])
    smoothingMethod = SelectField("Smoothing Option", choices=[('average', "Smooth By Average"), ('interpolation', "Smooth By Interpolation"), ('replacement', "Smooth By Constant (0)")], validators=[validators.Required("Please select a smoothing technique.")])
 
 class CorrelationForm(Form):
@@ -58,17 +58,11 @@ def correlation_view(attribute, country, indicatorData):
 @app.route("/min_max", methods=["GET", "POST"])
 def min_max_view(attribute, normalizeMethod, definition, smoothingMethod):
 
-		data = MinMax(attribute)
-		if normalizeMethod == "nby":
-			data.normalizeDataByYear()
-		elif normalizeMethod == "nba":
-			data.normalizeData()
-		data.organizedInfo['attributeAnalyzed'] = definition
+    mm = MinMax()
+    data = mm.generateData(attribute, normalizeMethod, smoothingMethod)
+    data['attributeAnalyzed'] = definition
 
-		rd = RetrieveData()
-		rd.getCountries()
-
-		return render_template("min_max.html", form = form, data=json.dumps(data.organizedInfo))
+    return render_template("min_max.html", form = form, data=json.dumps(data))
 
 
 def start():

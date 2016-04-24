@@ -244,7 +244,7 @@ def smoothByInterpolation(vect):
             toPredict.append(r)
         else:
             toTrainX.append(r)
-            toTrainY.append(vect[r])
+            toTrainY.append(vect[r][0,0])
 
     if len(toTrainX) <= 3:
         print "Not enough data to interpolate"

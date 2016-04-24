@@ -15,8 +15,6 @@ class MinMax(object):
 
     def generateData(self, attribute, normalization, smoothing):
 	    print attribute
-            normalization = "min-max"
-            smoothing = "average"
 	    data, rowDic, colDic = self.db.fetchAttributeOverTimeData(attribute)
             data, rowDic = Clean.removeInvalidCountries(data, rowDic)
 	    data, colDic = Clean.findValidTimeRange(data, colDic)
