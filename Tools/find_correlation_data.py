@@ -16,7 +16,7 @@ class CorrelatedIndicators(object):
 	def calculateCorrelations(self):
 		db = DatabaseReader()
 		dataMatrix, colDictionary, attributeDict = db.fetchCountryData(
-				self.country, (1960, 2014), asNumpyMatrix = False)
+				self.country, (2000, 2014), asNumpyMatrix = False)
 
 		attributeDictReverse = {}
 		for key, value in attributeDict.items():
@@ -41,7 +41,17 @@ class CorrelatedIndicators(object):
 		for attr, array in correlations.items():
 			correlations[attr] = pearsonr(array, correlations[self.attribute])[0]
 
-		return correlations
+		values = list(correlations.values())
+		keys = list(correlations.keys())
+
+
+		for key, value in correlations.items():
+			if math.isnan(value):
+				del correlations[key]
+
+		self.correlationValues = correlations
+
+
 
 	def findMostCorrelatedIndicators(self, correlations, k):
 
@@ -65,8 +75,10 @@ class CorrelatedIndicators(object):
 		print mostCorrelated
 		return mostCorrelated
 
-
+'''
 if __name__ == "__main__":
-	ci = CorrelatedIndicators("NY.GDP.MKTP.CD", "United States")
+	ci = CorrelatedIndicators("NY.GDP.MKTP.KD.ZG", "United States")
 	correlations = ci.calculateCorrelations()
-	ci.findMostCorrelatedIndicators(correlations, 10)
+	print ci.correlationValues
+	#ci.findMostCorrelatedIndicators(correlations, 10)
+'''

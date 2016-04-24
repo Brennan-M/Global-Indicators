@@ -10,6 +10,7 @@ sys.path.append('../Tools')
 
 from generate_min_max_data import MinMax
 from retrieve_db_data import RetrieveData
+from find_correlation_data import CorrelatedIndicators
 #from generate_cluster_data import Cluster
 
 app = Flask(__name__)
@@ -17,11 +18,9 @@ app = Flask(__name__)
 
 class InDepthForm(Form):
    attribute = TextField("Attribute", [validators.Required("Please select an attribute to analyze.")])
-   #options = [0, 1]
-   #normalizationMethod = SelectField(u'Normalization Method', validators = [validators.Required("Please select a normalization technique.")])
+   country = TextField("Country", [validators.Required("Please select a country.")])
    normalizationMethod = SelectField("Normalization Option", choices=[('nby', "Normalize By Year"), ('nba', "Normalize By Aggregate")], validators=[validators.Required("Please select a normalization technique.")])
-   submit = SubmitField("Analyze")
-
+   minMaxSubmit = SubmitField("Visualize Global Data")
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -29,26 +28,33 @@ def index():
 	form = InDepthForm(request.form)
    	rd = RetrieveData()
 	rd.getIndicators()
+	rd.getCountries()
 	if request.method == 'POST':
 		if form.validate() == True:
 			return min_max_view(request.form['attribute'], request.form['normalizationMethod'], rd.indicatorData[request.form['attribute']])
 		else:
-			return render_template('index.html', form = form, data=json.dumps(rd.indicatorData))
+			return render_template('index.html', form = form, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
 	elif request.method == 'GET':
-		return render_template('index.html', form = form, data=json.dumps(rd.indicatorData))
+		return render_template('index.html', form = form, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
 
 
 
-@app.route("/min_max")
+@app.route("/min_max", methods=["GET", "POST"])
 def min_max_view(attribute, normalizeMethod, definition):
-	print normalizeMethod
-	data = MinMax(attribute)
-	if normalizeMethod == "nby":
-		data.normalizeDataByYear()
-	elif normalizeMethod == "nba":
-		data.normalizeData()
-	data.organizedInfo['attributeAnalyzed'] = definition
-	return render_template("min_max.html", data=json.dumps(data.organizedInfo))
+
+		data = MinMax(attribute)
+		if normalizeMethod == "nby":
+			data.normalizeDataByYear()
+		elif normalizeMethod == "nba":
+			data.normalizeData()
+		data.organizedInfo['attributeAnalyzed'] = definition
+
+		rd = RetrieveData()
+		rd.getCountries()
+
+		return render_template("min_max.html", form = form, data=json.dumps(data.organizedInfo))
+
+
 
 
 def start():

@@ -31,7 +31,7 @@ class RetrieveData(object):
 
 	def getCountries(self):
 		for row in self.c.execute("SELECT DISTINCT CountryCode, TableName FROM Country"):
-			self.countryData[row[1]] = row[0]
+			self.countryData[row[0]] = row[1]
 
 '''
 if __name__ ==  "__main__":

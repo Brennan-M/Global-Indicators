@@ -3,39 +3,13 @@
 	<head>
   		<meta charset="utf-8">
   		<title>Attribute Min/Max Graph</title>
-  		<style>
-  			#wrapper {
-  			    width: 100%;
-  			    height: 700px;
-  			    overflow: hidden; /* add this to contain floated children */
-  			}
-  			#container {
-  			    width: 82%;
-  			    height: 700px;
-  			    float:left; /* add this */
-  			}
-  			#second {
-  				width: 18%;
-  				height: 700px;
-  			    float: left; /* add this */
-  			}
-  		</style>
 	</head>
 	<body>
 		<script src="http://d3js.org/d3.v3.min.js"></script>
 		<script src="http://d3js.org/topojson.v1.min.js"></script>
 		<script src="https://rawgithub.com/markmarkoh/datamaps/master/dist/datamaps.world.js"></script>
 		<h1 align="center" id="year"></h1>
-		<div id="wrapper">
-			<div id="container"></div>
-			<div id="second"> 
-				<ul id="correlationData">
-					<li>Whatever</li>
-					<li>Whatever2</li>
-				</ul>
-				<p id="attributeDescription">Description here</p>
-			</div>
-		</div>
+		<div id="container" style="position: relative; width: 1750px; height: 1050px;"></div>
 
 		<script type="text/javascript">
 			
