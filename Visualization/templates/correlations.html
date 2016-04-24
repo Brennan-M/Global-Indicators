@@ -24,7 +24,7 @@
 	 		correlationData = {{ correlationData|safe }}
 	 		indicatorData = {{ indicatorData|safe }}
 
-	 		document.getElementById("info").innerHTML = info["ctry"] + " - " + info["attr"];
+	 		document.getElementById("info").innerHTML = info["ctry"] + " - " + indicatorData[info["attr"]];
 		    
 		    var list = document.getElementById("listOfCorrelations");
 
