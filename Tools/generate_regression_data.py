@@ -226,7 +226,7 @@ class RegressionModel(object):
 
 				xt_ = np.reshape(xt_,(41,1))
 
-				clf = linear_model.Ridge(alpha = 1.0)
+				clf = linear_model.Ridge()
 				clf.fit(xt_, yt_)
 				tempred = clf.predict(dataMatrix2[year][attributeDict2[att]])
 				tempsum = tempsum+tempred
@@ -317,21 +317,24 @@ class RegressionModel(object):
 if __name__ == "__main__":
 	model = RegressionModel("NY.GDP.MKTP.KD", "United States")
 	actual = model.actual()
-	poly1 = model.polynomial(2, ['EG.ELC.PETR.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	poly1 = model.polynomial(2, ['EG.ELC.PETR.ZS','EN.URB.MCTY.TL.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
 	# poly2 = model.polynomial(2, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
 	# poly3 = model.polynomial(5, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
-	# ridge = model.ridge(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	ridge = model.ridge(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
 	#log = model.log(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
 	print poly1
-	# if(poly1 != 0):
-	# 	px1 = []
-	# 	py1 = []
-	# 	for key, value in poly1.items():
-	# 		px1.append(key)
-	# 		py1.append(value)
-	# 	plot(px1,py1,'r-')
-	# else:
-	# 	print "Not a valid attribute"
+	print ridge
+	print actual
+	#print log
+	if(poly1 != 0):
+		px1 = []
+		py1 = []
+		for key, value in poly1.items():
+			px1.append(key)
+			py1.append(value)
+		plot(px1,py1,'r-')
+	else:
+		print "Not a valid attribute"
 	# if(poly2 != 0):
 	# 	px2 = []
 	# 	py2 = []
@@ -347,12 +350,12 @@ if __name__ == "__main__":
 	# 	px3.append(key)
 	# 	py3.append(value)
 	# plot(px3,py3,'y-')
-	# rx = []
-	# ry = []
-	# for key, value in ridge.items():
-	# 	rx.append(key)
-	# 	ry.append(value)
-	# plot(rx,ry,'bo')
+	rx = []
+	ry = []
+	for key, value in ridge.items():
+		rx.append(key)
+		ry.append(value)
+	plot(rx,ry,'bo')
 	if (actual != 0):
 		ax = []
 		ay = []
