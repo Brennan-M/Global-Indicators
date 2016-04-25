@@ -3,66 +3,66 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-  		<title>Regression Graphs</title>
+		<title>Regression Graphs</title>
+		<script src="http://mbostock.github.com/d3/d3.v2.js"></script>
   		<style>
-  			body { font: 12px Arial;}
-
-			path { 
-			    stroke: steelblue;
-			    stroke-width: 2;
-			    fill: none;
+  			path {
+				stroke: steelblue;
+				stroke-width: 1;
+				fill: none;
 			}
-
-			.axis path,
-			.axis line {
-			    fill: none;
-			    stroke: grey;
-			    stroke-width: 1;
-			    shape-rendering: crispEdges;
+			
+			.axis {
+			  shape-rendering: crispEdges;
+			}
+			.x.axis line {
+			  stroke: lightgrey;
+			}
+			.x.axis .minor {
+			  stroke-opacity: .5;
+			}
+			.x.axis path {
+			  display: none;
+			}
+			.y.axis line, .y.axis path {
+			  fill: none;
+			  stroke: #000;
 			}
 
   		</style>
 	</head>
-	<style>
-
-	</style>
 	<body>
-		<script src="https://d3js.org/d3.v3.min.js"></script>
-		<h1 align="center" id="info"></h1>
+		<h1 align="center" id="info"></h1> 
+		<div id="graph" class="aGraph" style="position:absolute;top:0px;left:0; float:left;">
+		<!--<script src="https://d3js.org/d3.v2.min.js"></script>-->
+		
 		<script>
 
 		polydata = {{ polydata|safe }};
 
-		document.getElementById("info").innerHTML = 'Chart of degree' + polydata["1960"]
 
-		var margin = {top: 30, right: 20, bottom: 30, left: 50},
-    		width = 600 - margin.left - margin.right,
-    		height = 270 - margin.top - margin.bottom;
+		var data = []
+		var years = []
+		for (var j = 1960; j < 2015; j++){
+			years.push(j.toString())
+		}
 
-    	var x = d3.time.scale().range([0, width]);
-		var y = d3.scale.linear().range([height, 0]);
+		for (var i = 0; i < years.length; i++){
+			data.push(polydata[years[i]])
+		}
+		var dmin = Math.min(data)
+		var dmax = Math.max(data)
 
-		var xAxis = d3.svg.axis().scale(x)
-    		.orient("bottom");
+		document.getElementById("info").innerHTML = data[3] + " " + polydata["2006"]
 
-		var yAxis = d3.svg.axis().scale(y)
-    		.orient("left");
+		var m = [80, 80, 80, 80]; // margins
+		var w = 1000 - m[1] - m[3]; // width
+		var h = 400 - m[0] - m[2]; // height
 
-    	var valueline = d3.svg.line()
-    		.x(function(d) { return x(d.date); })
-    		.y(function(d) { return y(d.close); });
-
-    	var svg = d3.select("body")
-		    .append("svg")
-		        .attr("width", width + margin.left + margin.right)
-		        .attr("height", height + margin.top + margin.bottom)
-		    .append("g")
-		        .attr("transform", 
-		              "translate(" + margin.left + "," + margin.top + ")");
+		var x = d3.scale.linear().domain([0, data.length]).range([0, w]);
+		var y = d3.scale.linear().domain([dmin, dmax]).range([h, 0]);
 
 		
-
-
 
 
     	</script>
