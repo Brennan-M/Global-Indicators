@@ -83,16 +83,16 @@ def regression_view(attributeToModel, country, predictionAttributes):
 	print predictionAttributes
 
 	model = RegressionModel(attributeToModel, country)
-	poly1data = model.polynomial(1, predictionAttributes)
+	ridgedata = model.polynomial(1, predictionAttributes)
 	poly2data = model.polynomial(2, predictionAttributes)
-	actualData = model.actual()
+	actualdata = model.actual()
 
 	# model.polynomial["attributes"] = predictionAttributes
 	# model.polynomial["degree"] = 2
 
 	# When it is in dictonary form, you can pass it to the html
 	# using json.dumps(YOUR DATA), see examples below
-	return render_template("regression.html", poly1data=json.dumps(poly1data), poly2data=json.dumps(poly2data))
+	return render_template("regression.html", actualdata=json.dumps(actualdata), ridgedata=json.dumps(ridgedata), poly2data=json.dumps(poly2data))
 
 
 @app.route("/cluster", methods=["GET", "POST"])
