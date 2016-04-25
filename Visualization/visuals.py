@@ -86,6 +86,7 @@ def regression_view(attributeToModel, country, predictionAttributes):
 	polydata = model.polynomial(2, predictionAttributes)
 	# model.polynomial["attributes"] = predictionAttributes
 	# model.polynomial["degree"] = 2
+	print polydata
 
 	# When it is in dictonary form, you can pass it to the html
 	# using json.dumps(YOUR DATA), see examples below
