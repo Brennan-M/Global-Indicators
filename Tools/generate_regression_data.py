@@ -29,6 +29,23 @@ class RegressionModel(object):
 		dataMatrix, colDictionary, attributeDict = db.fetchCountryData(
 		self.country, (1960, 2014), useCountryCode=False, asNumpyMatrix=False)
 
+		try:
+			clean.transformColumns(dataMatrix, clean.smoothByAverage)
+		except ValueError:
+			clean.transformColumns(dataMatrix, clean.smoothByReplacement(0))
+
+		# for year in dataMatrix:
+		# 	print year
+
+		valid = False
+		for key,value in attributeDict.items():
+			if(key == self.attribute):
+				valid = True
+
+		if (valid == False):
+			return 0
+
+
 		yt_ = [] #un-numpified training data for y
 		for year in range(0, len(dataMatrix)):
 			yt_.append(dataMatrix[year][attributeDict[self.attribute]])
@@ -53,6 +70,19 @@ class RegressionModel(object):
 		db = DatabaseReader()
 		dataMatrix, colDictionary, attributeDict = db.fetchCountryData(
 		self.country, (1960, 2000), useCountryCode=False, asNumpyMatrix=False)
+
+		try:
+			clean.transformColumns(dataMatrix, clean.smoothByAverage)
+		except ValueError:
+			clean.transformColumns(dataMatrix, clean.smoothByReplacement(0))
+
+		valid = False
+		for key,value in attributeDict.items():
+			if(key == self.attribute):
+				valid = True
+
+		if (valid == False):
+			return 0
 
 
 		"""Initialize, fill, and convert target data for training"""
@@ -130,11 +160,14 @@ class RegressionModel(object):
 
 		for year in range(41, 55):
 			totsum = 0
+			numsum = 0
 			for num in range(0, len(attributes)):
 				xtemp = dataMatrix2[year][attributeDict2[attributes[num]]]
-				regtemp = eqList[num]
-				totsum = totsum + (regtemp(xtemp))
-			yp_ = np.append(yp_, totsum/(len(attributes)))
+				if(math.isnan(xtemp) == False):
+					regtemp = eqList[num]
+					totsum = totsum + (regtemp(xtemp))
+					numsum += 1
+			yp_ = np.append(yp_, totsum/numsum)
 
 		polydict = {}
 		for num in range(0, len(x_)):
@@ -146,6 +179,19 @@ class RegressionModel(object):
 		db = DatabaseReader()
 		dataMatrix, colDictionary, attributeDict = db.fetchCountryData(
 		self.country, (1960, 2000), useCountryCode=False, asNumpyMatrix=False)
+
+		try:
+			clean.transformColumns(dataMatrix, clean.smoothByAverage)
+		except ValueError:
+			clean.transformColumns(dataMatrix, clean.smoothByReplacement(0))
+
+		valid = False
+		for key,value in attributeDict.items():
+			if(key == self.attribute):
+				valid = True
+
+		if (valid == False):
+			return 0
 
 		db2 = DatabaseReader()
 		dataMatrix2, colDictionary2, attributeDict2 = db.fetchCountryData(
@@ -197,6 +243,19 @@ class RegressionModel(object):
 		dataMatrix, colDictionary, attributeDict = db.fetchCountryData(
 		self.country, (1960, 2000), useCountryCode=False, asNumpyMatrix=False)
 
+		try:
+			clean.transformColumns(dataMatrix, clean.smoothByAverage)
+		except ValueError:
+			clean.transformColumns(dataMatrix, clean.smoothByReplacement(0))
+
+		valid = False
+		for key,value in attributeDict.items():
+			if(key == self.attribute):
+				valid = True
+
+		if (valid == False):
+			return 0
+
 		db2 = DatabaseReader()
 		dataMatrix2, colDictionary2, attributeDict2 = db.fetchCountryData(
 		self.country, (2001, 2014), useCountryCode=False, asNumpyMatrix = False)
@@ -245,27 +304,50 @@ class RegressionModel(object):
 
 
 if __name__ == "__main__":
-	model = RegressionModel("NY.GDP.MKTP.CD", "United States")
+	model = RegressionModel("NY.GDP.MKTP.CD", "Algeria")
 	actual = model.actual()
-	poly = model.polynomial(2, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
-	ridge = model.ridge(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
-	log = model.log(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
-	px = []
-	py = []
-	for key, value in poly.items():
-		px.append(key)
-		py.append(value)
-	plot(px,py,'ro')
-	rx = []
-	ry = []
-	for key, value in ridge.items():
-		rx.append(key)
-		ry.append(value)
-	plot(rx,ry,'bo')
-	ax = []
-	ay = []
-	for key, value in actual.items():
-		ax.append(key)
-		ay.append(value)
-	plot(ax,ay,'go')
-	show()
+	poly1 = model.polynomial(4, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	# poly2 = model.polynomial(2, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	# poly3 = model.polynomial(5, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	# ridge = model.ridge(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	#log = model.log(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	if(poly1 != 0):
+		px1 = []
+		py1 = []
+		for key, value in poly1.items():
+			px1.append(key)
+			py1.append(value)
+		plot(px1,py1,'r-')
+	else:
+		print "Not a valid attribute"
+	# if(poly2 != 0):
+	# 	px2 = []
+	# 	py2 = []
+	# 	for key, value in poly2.items():
+	# 		px2.append(key)
+	# 		py2.append(value)
+	# 	plot(px2,py2,'b-')
+	# else:
+	# 	print "Not a valid attribute"
+	# px3 = []
+	# py3 = []
+	# for key, value in poly3.items():
+	# 	px3.append(key)
+	# 	py3.append(value)
+	# plot(px3,py3,'y-')
+	# rx = []
+	# ry = []
+	# for key, value in ridge.items():
+	# 	rx.append(key)
+	# 	ry.append(value)
+	# plot(rx,ry,'bo')
+	if (actual != 0):
+		ax = []
+		ay = []
+		for key, value in actual.items():
+			ax.append(key)
+			ay.append(value)
+		plot(ax,ay,'g-')
+		show()
+	else:
+		print "Invalid target Attribute"
