@@ -172,6 +172,10 @@ class RegressionModel(object):
 		for num in range(0, len(x_)):
 			polydict[x_[num]] = yp_[num]
 
+		for key, value in polydict.items():
+			if(math.isnan(value)):
+				del(polydict[key])
+
 		return polydict
 
 	def ridge(self, attributes):
@@ -303,22 +307,23 @@ class RegressionModel(object):
 
 
 if __name__ == "__main__":
-	model = RegressionModel("NY.GDP.MKTP.CD", "Algeria")
+	model = RegressionModel("NY.GDP.MKTP.KD", "United States")
 	actual = model.actual()
-	poly1 = model.polynomial(4, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	poly1 = model.polynomial(2, ['EG.ELC.PETR.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
 	# poly2 = model.polynomial(2, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
 	# poly3 = model.polynomial(5, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
 	# ridge = model.ridge(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
 	#log = model.log(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
-	if(poly1 != 0):
-		px1 = []
-		py1 = []
-		for key, value in poly1.items():
-			px1.append(key)
-			py1.append(value)
-		plot(px1,py1,'r-')
-	else:
-		print "Not a valid attribute"
+	print poly1
+	# if(poly1 != 0):
+	# 	px1 = []
+	# 	py1 = []
+	# 	for key, value in poly1.items():
+	# 		px1.append(key)
+	# 		py1.append(value)
+	# 	plot(px1,py1,'r-')
+	# else:
+	# 	print "Not a valid attribute"
 	# if(poly2 != 0):
 	# 	px2 = []
 	# 	py2 = []
