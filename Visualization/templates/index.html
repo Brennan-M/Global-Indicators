@@ -134,7 +134,7 @@
 				<br>
 				</div>
 			</div>
-			<div class="three">
+			<div class="one">
 				<div class="container-fluid">
 				<br>
 				<h4>Countries</h4>
@@ -167,7 +167,7 @@
 
 			for (var key in indicator_data) {
 				var entry = document.createElement('li');
-				entry.appendChild(document.createTextNode(key));
+				entry.appendChild(document.createTextNode(indicator_data[key]));
 				entry.setAttribute('id', key);
 				entry.onclick = exploreAttribute;
 				list.appendChild(entry);
@@ -175,7 +175,7 @@
 
 			function exploreAttribute() {
 				var infoBox = document.getElementById("attributeDescription");
-				infoBox.innerHTML = indicator_data[this.getAttribute("id")];
+				infoBox.innerHTML = this.getAttribute("id");
 			}
 		
 		    

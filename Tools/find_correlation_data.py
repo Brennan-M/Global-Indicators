@@ -67,8 +67,11 @@ class CorrelatedIndicators(object):
 			if math.isnan(value):
 				del correlations[key]
 
+		del correlations[self.attribute]
+
 		self.correlationValues = []
 		for key, value in correlations.items():
+			value = round(value, 3)
 			self.correlationValues.append((key, value))
 
 		self.correlationValues = sorted(self.correlationValues, key=lambda x: x[1])

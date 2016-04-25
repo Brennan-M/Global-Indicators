@@ -8,8 +8,11 @@
 		<script src="http://d3js.org/d3.v3.min.js"></script>
 		<script src="http://d3js.org/topojson.v1.min.js"></script>
 		<script src="https://rawgithub.com/markmarkoh/datamaps/master/dist/datamaps.world.js"></script>
+	<div>
 		<h1 align="center" id="year"></h1>
-		<div id="container" style="position: relative; width: 1750px; height: 1050px;"></div>
+		<button id="restartButton" onclick="mainLoop()">Restart Loop</button>
+	</div>
+		<div id="container" style="width: 1650px; height: 1050px;"></div>
 
 		<script type="text/javascript">
 			
@@ -27,34 +30,41 @@
 		    	}
 			});
 		    
-		    var i = 0;
-		    function timerLoop() {
-		    	setTimeout(function () {
-				    
-					var year = Object.keys(min_max_data)[i];
-					var ccodes = Object.keys(min_max_data[year]);
+		    
+		    function mainLoop() {
+		    	var i = 0; 
 
-					document.getElementById("year").innerHTML = min_max_data["attributeAnalyzed"] + " - " + year;
-					for (var j = 0; j < ccodes.length; j++) {
+		    	timerLoop();
 
-						ccode = ccodes[j];
-						value = min_max_data[year][ccode];
-						console.log(year, ccode, value);
-						var country = {}
-						country[ccode] = {fillColor:paletteScale(value), numberOfThings:value}
-						map.updateChoropleth(country);
-					}
+			    function timerLoop() {
 
-					i++;
-				    
-				    if (i < Object.keys(min_max_data).length) {
-				    	timerLoop();
-				    }
+			    	setTimeout(function () {
+					    
+						var year = Object.keys(min_max_data)[i];
+						var ccodes = Object.keys(min_max_data[year]);
 
-				}, 1000)
+						document.getElementById("year").innerHTML = min_max_data["attributeAnalyzed"] + " - " + year;
+						for (var j = 0; j < ccodes.length; j++) {
+
+							ccode = ccodes[j];
+							value = min_max_data[year][ccode];
+							console.log(year, ccode, value);
+							var country = {}
+							country[ccode] = {fillColor:paletteScale(value), numberOfThings:value}
+							map.updateChoropleth(country);
+						}
+
+						i++;
+					    
+					    if (i < Object.keys(min_max_data).length) {
+					    	timerLoop();
+					    }
+
+					}, 1000)
+				}
 			}
 
-			timerLoop();
+			mainLoop();
 		    
 		</script>
 	</body>
