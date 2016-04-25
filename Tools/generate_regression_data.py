@@ -1,0 +1,271 @@
+import sys
+sys.path.append('../Util')
+import math
+
+from database_reader import DatabaseReader
+import matrix_cleaning as clean
+from matplotlib.pyplot import *
+from sklearn import linear_model
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.pipeline import make_pipeline
+from sklearn.linear_model import Ridge
+
+import numpy as np
+#import numpy.linalg as LA
+from scipy.interpolate import *
+from scipy import stats
+from find_correlation_data import CorrelatedIndicators
+
+
+class RegressionModel(object):
+	
+	def __init__(self, attribute, country):
+		self.attribute = attribute
+		self.country = country
+		#self.attlist = attlist
+
+	def actual(self):
+		db = DatabaseReader()
+		dataMatrix, colDictionary, attributeDict = db.fetchCountryData(
+		self.country, (1960, 2014), useCountryCode=False, asNumpyMatrix=False)
+
+		yt_ = [] #un-numpified training data for y
+		for year in range(0, len(dataMatrix)):
+			yt_.append(dataMatrix[year][attributeDict[self.attribute]])
+
+		yt_ = np.asarray(yt_) #numpify target training data
+
+		x_ = []
+		for year in range(1960,2015):
+			x_.append(year)
+
+		actualdict = {}
+		for num in range(0, len(x_)):
+			actualdict[x_[num]] = yt_[num]
+
+		return actualdict
+
+
+
+	def polynomial(self, degree, attributes):
+
+		"""Read in limited database for training"""
+		db = DatabaseReader()
+		dataMatrix, colDictionary, attributeDict = db.fetchCountryData(
+		self.country, (1960, 2000), useCountryCode=False, asNumpyMatrix=False)
+
+
+		"""Initialize, fill, and convert target data for training"""
+		yt_ = [] #un-numpified training data for y
+		for year in range(0, len(dataMatrix)):
+			yt_.append(dataMatrix[year][attributeDict[self.attribute]])
+
+		yt_ = np.asarray(yt_) #numpify target training data
+
+		"""Create list of weights by normalizing correlation values of attributes"""
+		"""corrList = []
+		weights = []
+
+		ci = CorrelatedIndicators(self.attribute, self.country)
+		correlations = ci.calculateCorrelations()
+
+		for name in range(0, len(attributes)):
+			#print 1
+			for att in ci.correlationValues:
+				if (attributes[name] == att[0]):
+					#print att[1]
+					temp = abs(att[1])
+					corrList.append(temp)
+
+		#Normalize correlation values and store as weights
+		if(len(attributes) > 1):
+			for corr in corrList:
+				corr = (corr - min(corrList))/(2*(max(corrList)-min(corrList)))+0.5
+				weights.append(corr.astype(float))
+		else:
+			weights = [1]
+
+		#Zip attribute names and weights for ease of use
+		attweights = zip(attributes, weights)"""		
+
+		"""This section creates lists of regression line equations for use in predictions"""
+		polylines = []
+		eqList = []
+		
+		#Iterate through attributes and calculate regression lines for each against the target attribute
+		for att in attributes:
+			xt_ = [] #un-numpified training data for x
+			for year in range(0, len(dataMatrix)):
+				temp = dataMatrix[year][attributeDict[att]]
+				xt_.append(temp)
+
+			xt_ = np.asarray(xt_) #numpify training data for x
+
+			pfit = np.polyfit(xt_,yt_,degree)
+			poly = np.poly1d(pfit)
+			eqList.append(poly)
+
+			pfit = tuple(pfit)
+			polylines.append(pfit)
+
+		"""Read in data up to modelYear, for modeling and comparison"""
+		db2 = DatabaseReader()
+		dataMatrix2, colDictionary2, attributeDict2 = db.fetchCountryData(
+		self.country, (1960, 2014), useCountryCode=False, asNumpyMatrix = False)
+
+		"""Initialize new copy of target attribute data and populate for comparison""" 
+		yp_ = yt_
+		x_ = []
+
+		for year in range(1960, 2015):
+			x_.append(year)
+
+		x_ = np.asarray(x_)
+
+		tempval = 0
+		tempsum = 0
+		totsum = 0
+
+		#print sum(weights)
+
+		for year in range(41, 55):
+			totsum = 0
+			for num in range(0, len(attributes)):
+				xtemp = dataMatrix2[year][attributeDict2[attributes[num]]]
+				regtemp = eqList[num]
+				totsum = totsum + (regtemp(xtemp))
+			yp_ = np.append(yp_, totsum/(len(attributes)))
+
+		polydict = {}
+		for num in range(0, len(x_)):
+			polydict[x_[num]] = yp_[num]
+
+		return polydict
+
+	def ridge(self, attributes):
+		db = DatabaseReader()
+		dataMatrix, colDictionary, attributeDict = db.fetchCountryData(
+		self.country, (1960, 2000), useCountryCode=False, asNumpyMatrix=False)
+
+		db2 = DatabaseReader()
+		dataMatrix2, colDictionary2, attributeDict2 = db.fetchCountryData(
+		self.country, (2001, 2014), useCountryCode=False, asNumpyMatrix = False)
+
+
+		"""Initialize, fill, and convert target data for training"""
+		yt_ = [] #un-numpified training data for y
+		for year in range(0, len(dataMatrix)):
+			yt_.append(dataMatrix[year][attributeDict[self.attribute]])
+
+		yt_ = np.asarray(yt_) #numpify target training data
+
+		yp_ = yt_
+
+		for year in range(0, len(dataMatrix2)):
+			tempsum = 0
+			for att in attributes:
+				xt = [] #un-numpified training data for x
+				for year2 in range(0, len(dataMatrix)):
+					temp = dataMatrix[year2][attributeDict[att]]
+					xt.append(temp)
+
+				xt_ = np.asarray(xt) #numpify training data for x
+
+				xt_ = np.reshape(xt_,(41,1))
+
+				clf = linear_model.Ridge(alpha = 1.0)
+				clf.fit(xt_, yt_)
+				tempred = clf.predict(dataMatrix2[year][attributeDict2[att]])
+				tempsum = tempsum+tempred
+			tempval = tempsum/len(attributes)
+			yp_ = np.append(yp_,tempval)
+
+		x_ = []
+		for year in range(1960, 2015):
+			x_.append(year)
+		x_ = np.asarray(x_)
+
+		ridgedict = {}
+		for num in range(0, len(x_)):
+			ridgedict[x_[num]] = yp_[num]
+
+		return ridgedict
+
+
+	def log(self, attributes):
+		db = DatabaseReader()
+		dataMatrix, colDictionary, attributeDict = db.fetchCountryData(
+		self.country, (1960, 2000), useCountryCode=False, asNumpyMatrix=False)
+
+		db2 = DatabaseReader()
+		dataMatrix2, colDictionary2, attributeDict2 = db.fetchCountryData(
+		self.country, (2001, 2014), useCountryCode=False, asNumpyMatrix = False)
+
+
+		"""Initialize, fill, and convert target data for training"""
+		yt_ = [] #un-numpified training data for y
+		for year in range(0, len(dataMatrix)):
+			yt_.append(dataMatrix[year][attributeDict[self.attribute]])
+
+		yt_ = np.asarray(yt_) #numpify target training data
+
+		yp_ = yt_
+
+		for year in range(0, len(dataMatrix2)):
+			tempsum = 0
+			for att in attributes:
+				xt = [] #un-numpified training data for x
+				for year2 in range(0, len(dataMatrix)):
+					temp = dataMatrix[year2][attributeDict[att]]
+					xt.append(temp)
+
+				xt_ = np.asarray(xt) #numpify training data for x
+
+				xt_ = np.reshape(xt_,(41,1))
+
+				llf = linear_model.LogisticRegression(penalty = 'l2')
+				llf.fit(xt_, yt_)
+				tempred = llf.predict(dataMatrix2[year][attributeDict2[att]])
+				tempsum = tempsum+tempred
+			tempval = tempsum/len(attributes)
+			yp_ = np.append(yp_,tempval)
+
+		x_ = []
+		for year in range(1960, 2015):
+			x_.append(year)
+		x_ = np.asarray(x_)
+
+		logdict = {}
+		for num in range(0, len(x_)):
+			logdict[x_[num]] = yp_[num]
+
+		return logdict
+
+
+
+
+if __name__ == "__main__":
+	model = RegressionModel("NY.GDP.MKTP.CD", "United States")
+	actual = model.actual()
+	poly = model.polynomial(2, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	ridge = model.ridge(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	log = model.log(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	px = []
+	py = []
+	for key, value in poly.items():
+		px.append(key)
+		py.append(value)
+	plot(px,py,'ro')
+	rx = []
+	ry = []
+	for key, value in ridge.items():
+		rx.append(key)
+		ry.append(value)
+	plot(rx,ry,'bo')
+	ax = []
+	ay = []
+	for key, value in actual.items():
+		ax.append(key)
+		ay.append(value)
+	plot(ax,ay,'go')
+	show()

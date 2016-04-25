@@ -12,6 +12,7 @@ from generate_min_max_data import MinMax
 from retrieve_db_data import RetrieveData
 from find_correlation_data import CorrelatedIndicators
 from generate_cluster_data import Cluster
+from generate_regression_data import RegressionModel
 
 app = Flask(__name__)
 
@@ -76,11 +77,19 @@ def regression_view(attributeToModel, country, predictionAttributes):
 
 	print attributeToModel
 	print country
+	#print predictionAttributes
+	attributeToModel = attributeToModel.encode('UTF8')
+	predictionAttributes = [x.encode('UTF8') for x in predictionAttributes]
 	print predictionAttributes
+
+	model = RegressionModel(attributeToModel, country)
+	polydata = model.polynomial(2, predictionAttributes)
+	# model.polynomial["attributes"] = predictionAttributes
+	# model.polynomial["degree"] = 2
 
 	# When it is in dictonary form, you can pass it to the html
 	# using json.dumps(YOUR DATA), see examples below
-	return render_template("regression.html")
+	return render_template("regression.html", polydata=json.dumps(polydata))
 
 
 @app.route("/cluster", methods=["GET", "POST"])
