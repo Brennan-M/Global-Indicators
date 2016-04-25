@@ -60,6 +60,10 @@ class RegressionModel(object):
 		for num in range(0, len(x_)):
 			actualdict[x_[num]] = yt_[num]
 
+		for key, value in actualdict.items():
+			if(math.isnan(value)):
+				del(actualdict[key])
+
 		return actualdict
 
 
@@ -237,6 +241,10 @@ class RegressionModel(object):
 		ridgedict = {}
 		for num in range(0, len(x_)):
 			ridgedict[x_[num]] = yp_[num]
+
+		for key, value in ridgedict.items():
+			if(math.isnan(value)):
+				del(ridgedict[key])
 
 		return ridgedict
 
