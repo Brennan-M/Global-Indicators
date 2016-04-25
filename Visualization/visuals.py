@@ -26,16 +26,23 @@ class CorrelationForm(Form):
 	country = TextField("Country", [validators.Required("Please select a country.")])
 
 class ClusterForm(Form):
-	attributes = TextField("Attributes, Comma Separated", [validators.Required("Please select attributes to analyze, at least 2.")])
+	attributes = TextField("Attributes, Comma Separated", [validators.Required("Please select attributes to analyze.")])
 	clusterTechnique = SelectField("Cluster Technique", choices=[('spectral', "Spectral"), ('kmeans', "K-Means")])
 	kvalue = IntegerField("Cluster Count", [validators.Required("Please specify a k-count.")])
 	year = IntegerField("Year", [validators.Required("Please specify a year.")])
+
+class RegressionForm(Form):
+	regressionAttribute = TextField("Attribute To Model", [validators.Required("Please select an attribute to build a regression model for.")])
+	country = TextField("Country", [validators.Required("Please select a country.")])
+	predictingAttributes = TextField("Attributes To Predict On, Comma Separated", [validators.Required("Please select attributes to include in the model.")])
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
 	mmForm = MinMaxForm(request.form)
 	cForm = CorrelationForm(request.form)
 	clusterForm = ClusterForm(request.form)
+	regressionForm = RegressionForm(request.form)
    	rd = RetrieveData()
 	rd.getIndicators()
 	rd.getCountries()
@@ -47,10 +54,33 @@ def index():
 			return correlation_view(request.form['attribute2'], request.form['country'], rd.indicatorData)
 		elif clusterForm.validate() and request.form['cluster'] == 'Cluster':
 			return cluster_view(request.form['attributes'], request.form['kvalue'], request.form['clusterTechnique'], request.form['year'], rd.indicatorData)
+		elif regressionForm.validate() and request.form['regression'] == 'Regression':
+			return regression_view(request.form['regressionAttribute'], request.form['country'], request.form['predictingAttributes'])
 		else:
-			return render_template('index.html', form3 = clusterForm, form2 = cForm, form = mmForm, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
+			return render_template('index.html', form4 = regressionForm, form3 = clusterForm, form2 = cForm, form = mmForm, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
 	elif request.method == 'GET':
-		return render_template('index.html', form3 = clusterForm, form2 = cForm, form = mmForm, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
+		return render_template('index.html', form4 = regressionForm, form3 = clusterForm, form2 = cForm, form = mmForm, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
+
+
+@app.route("/regression", methods=["GET", "POST"])
+def regression_view(attributeToModel, country, predictionAttributes):
+	# Michael, You should use the attributes passed in here
+	# as the parameters to your regression class
+
+	# predictionAttributes when passed in is a comma separated string
+	# so I convert it to a python array so it is easy for you to use.
+	# The array, as you can see when it is printed out, is in Unicode
+	# so you may need to convert this, not quite sure
+	predictionAttributes = predictionAttributes.split(",")
+	predictionAttributes = [x.strip() for x in predictionAttributes]
+
+	print attributeToModel
+	print country
+	print predictionAttributes
+
+	# When it is in dictonary form, you can pass it to the html
+	# using json.dumps(YOUR DATA), see examples below
+	return render_template("regression.html")
 
 
 @app.route("/cluster", methods=["GET", "POST"])

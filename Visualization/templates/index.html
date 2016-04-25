@@ -8,16 +8,12 @@
 				overflow:hidden;
 				overflow-y:scroll;
 			}
-			.wrapper2{
-				width:95%;
-				margin-top: 5%;
-			}
 			.wrapper{
-			   width: 95%;
+			   width: 100%;
 			}
 			.one, .two, .three{
 			   display:block;
-			   width:33%;
+			   width:25%;
 			   box-sizing: border-box;
 			}
 			.one {
@@ -117,6 +113,32 @@
 	               {% endfor %}
 	               <br>
 				<input type="submit" name="cluster" value="Cluster">
+				</div>
+			</form>
+		</div>
+		<div class="one">
+			<form action="/" method="post" value="cluster">
+				<h2>Regression</h2>
+				<div class="container-fluid" style = font-size:20px; font-weight:bold;>
+	               {{ form4.regressionAttribute.label }}
+	               {{ form4.regressionAttribute }}
+	               {% for message in form4.regressionAttribute.errors %}
+	                        <div style="color:#FF0000"> {{ message }}</div>
+	               {% endfor %}
+	               <br>
+	               {{ form4.country.label }}
+	               {{ form4.country }}
+	               {% for message in form4.country.errors %}
+	                        <div style="color:#FF0000"> {{ message }}</div>
+	               {% endfor %}
+	               <br>
+	               {{ form4.predictingAttributes.label }}
+	               {{ form4.predictingAttributes }}
+	               {% for message in form4.predictingAttributes.errors %}
+	                        <div style="color:#FF0000"> {{ message }}</div>
+	               {% endfor %}
+	               <br>
+				<input type="submit" name="regression" value="Regression">
 				</div>
 			</form>
 		</div>
