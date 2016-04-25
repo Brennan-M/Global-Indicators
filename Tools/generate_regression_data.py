@@ -163,11 +163,10 @@ class RegressionModel(object):
 			numsum = 0
 			for num in range(0, len(attributes)):
 				xtemp = dataMatrix2[year][attributeDict2[attributes[num]]]
-				if(math.isnan(xtemp) == False):
-					regtemp = eqList[num]
-					totsum = totsum + (regtemp(xtemp))
-					numsum += 1
-			yp_ = np.append(yp_, totsum/numsum)
+				regtemp = eqList[num]
+				totsum = totsum + (regtemp(xtemp))
+				numsum += 1
+			yp_ = np.append(yp_, totsum/(len(attributes)))
 
 		polydict = {}
 		for num in range(0, len(x_)):
