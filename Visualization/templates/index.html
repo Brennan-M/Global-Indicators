@@ -42,7 +42,7 @@
 	<div class="wrapper">
 		<div class="one">
 			<form action="/" method="post" value="minmax">
-				
+				<h2>Single Attribute Map</h2>
 				    <div class="container-fluid" style = font-size:20px; font-weight:bold;>
 			               {{ form.attribute.label }}
 			               {{ form.attribute }}
@@ -66,8 +66,10 @@
 			        </div>
 			</form>
 		</div>
-		<div class="two">
+
+		<div class="one">
 			<form action="/" method="post" value="correlation">
+				<h2>Correlation</h2>
 				<div class="container-fluid" style = font-size:20px; font-weight:bold;>
 	               {{ form2.attribute2.label }}
 	               {{ form2.attribute2 }}
@@ -85,34 +87,10 @@
 				</div>
 			</form>
 		</div> 
-	</div>
 
-		<br>
-		<div>
-			<div class="one">
-				<div class="container-fluid">
-				<br>
-				<h4>Indicators</h4>
-				<ul id="listOfIndicators">
-				</ul>
-				<p id="attributeDescription"></p>
-				<br>
-				</div>
-			</div>
-			<div class="three">
-				<div class="container-fluid">
-				<br>
-				<h4>Countries</h4>
-				<ul id="listOfCountries">
-				</ul>
-				</div>
-			</div>
-		</div>
-		<br>
-		<br>
-		<div class="wrapper">
-			<div class="one">
+		<div class="one">
 			<form action="/" method="post" value="cluster">
+				<h2>Clustering</h2>
 				<div class="container-fluid" style = font-size:20px; font-weight:bold;>
 	               {{ form3.attributes.label }}
 	               {{ form3.attributes }}
@@ -142,7 +120,31 @@
 				</div>
 			</form>
 		</div>
+	</div>
+
+		<br>
+		<div>
+			<div class="one">
+				<div class="container-fluid">
+				<br>
+				<h4>Indicators</h4>
+				<ul id="listOfIndicators">
+				</ul>
+				<p id="attributeDescription"></p>
+				<br>
+				</div>
+			</div>
+			<div class="three">
+				<div class="container-fluid">
+				<br>
+				<h4>Countries</h4>
+				<ul id="listOfCountries">
+				</ul>
+				</div>
+			</div>
 		</div>
+		<br>
+		<br>
 	</body>
 	<script type="text/javascript">
 			
