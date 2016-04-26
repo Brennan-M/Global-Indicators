@@ -16,6 +16,8 @@ from scipy.interpolate import *
 from scipy import stats
 from find_correlation_data import CorrelatedIndicators
 
+"""Author: Michael Feller"""
+
 
 class RegressionModel(object):
 	
