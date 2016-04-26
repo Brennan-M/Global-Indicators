@@ -12,7 +12,7 @@
 	  		/* tell the SVG path to be a thin blue line without any area fill */
 	  		path {
 	  			stroke: steelblue;
-	  			stroke-width: 1;
+	  			stroke-width: 2;
 	  			fill: none;
 	  		}
 	  		
@@ -34,7 +34,9 @@
 	  		
 	  		.y.axis line, .y.axis path {
 	  		  fill: none;
-	  		  stroke: #000;
+			    stroke: grey;
+			    stroke-width: 1;
+			    shape-rendering: crispEdges;
 	  		}
 /*  			body {
   				font: 10px sans-serif;
@@ -81,10 +83,10 @@
 		actualdata = {{ actualdata|safe }};
 		ridgedata = {{ ridgedata|safe }};
 		poly2data = {{ poly2data|safe }};
+		// poly3data = {{ poly3data|safe }};
 		regressionInfo = {{ regressionInfo|safe }};
 		indicatorData = {{ indicatorData|safe }};
 
-		console.log(regressionInfo)
 
 
 		document.getElementById("info").innerHTML = indicatorData[regressionInfo["modeling"]]
@@ -114,6 +116,12 @@
 			poly2values.push(poly2data[poly2keys[i]])
 		}
 
+		// var poly3keys = Object.keys(poly3data)
+		// var poly3values = []
+		// for (var i = 0; i < poly3keys.length; i++) {
+		// 	poly3values.push(poly3data[poly3keys[i]])
+		// }
+
 		/* implementation heavily influenced by http://bl.ocks.org/1166403 */
 		
 		ridgeMax = Math.max.apply(null, ridgevalues);
@@ -122,8 +130,10 @@
 		actualMin = Math.min.apply(null, actualvalues);
 		poly2Max = Math.max.apply(null, poly2values);
 		poly2Min = Math.min.apply(null, poly2values);
-		max = Math.max(ridgeMax, actualMax, poly2Max);
-		min = Math.min(ridgeMin, actualMin, poly2Min);
+		// poly3Max = Math.max.apply(null, poly3values);
+		// poly3Min = Math.min.apply(null, poly3values);
+		max = Math.max(ridgeMax, actualMax, poly2Max);//, poly3Max);
+		min = Math.min(ridgeMin, actualMin, poly2Min);//, poly3Min);
 
 		// define dimensions of graph
 		var m = [10, 30, 30, 200]; // margins
@@ -150,13 +160,11 @@
 				// verbose logging to show what's actually being done
 				// return the X coordinate where we want to plot this datapoint
 				//console.log(x(i))
-				console.log(x(ridgekeys[i]))
-				return x(timeFormat.parse(ridgekeys[i])); 
+				return x(timeFormat.parse(actualkeys[i])); 
 			})
 			.y(function(d) { 
 				// verbose logging to show what's actually being done
 				// return the Y coordinate where we want to plot this datapoint
-				console.log(y(d))
 				return y(d); 
 			})
 			.interpolate("monotone");
@@ -190,9 +198,10 @@
 		
 			// Add the line by appending an svg:path element with the data line we created above
 		// do this AFTER the axes above so that the line is above the tick-lines
-		graph.append("svg:path").attr("d", line(ridgevalues));
-		graph.append("svg:path").attr("d", line(poly2values));
-		graph.append("svg:path").attr("d", line(actualvalues));
+		graph.append("svg:path").attr("d", line(ridgevalues)).style("stroke", "#FF0000");
+		graph.append("svg:path").attr("d", line(poly2values)).style("stroke", "#00FF00");
+		//graph.append("svg:path").attr("d", line(poly3values)).style("stroke", "#0000FF");
+		graph.append("svg:path").attr("d", line(actualvalues)).style("stroke", "#000000");
 			
     	</script>
 	</body>
