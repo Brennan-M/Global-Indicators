@@ -107,34 +107,7 @@ class RegressionModel(object):
 		for year in range(0, len(dataMatrix)):
 			yt_.append(dataMatrix[year][attributeDict[self.attribute]])
 
-		yt_ = np.asarray(yt_) #numpify target training data
-
-		"""Create list of weights by normalizing correlation values of attributes"""
-		corrList = []
-		#weights = []
-
-		ci = CorrelatedIndicators(self.attribute, self.country)
-		correlations = ci.calculateCorrelations()
-
-		for name in range(0, len(attributes)):
-			#print 1
-			for att in ci.correlationValues:
-				if (attributes[name] == att[0]):
-					#print att[1]
-					temp = abs(att[1])
-					corrList.append(temp)
-		print len(corrList)
-		"""
-		#Normalize correlation values and store as weights
-		if(len(attributes) > 1):
-			for corr in corrList:
-				corr = (corr - min(corrList))/(2*(max(corrList)-min(corrList)))+0.5
-				weights.append(corr.astype(float))
-		else:
-			weights = [1]
-
-		#Zip attribute names and weights for ease of use
-		attweights = zip(attributes, weights)"""		
+		yt_ = np.asarray(yt_) #numpify target training data		
 
 		"""This section creates lists of regression line equations for use in predictions"""
 		polylines = []
@@ -243,7 +216,7 @@ class RegressionModel(object):
 
 				xt_ = np.reshape(xt_,(41,1))
 
-				clf = linear_model.Ridge()
+				clf = linear_model.Ridge(alpha = 0)
 				clf.fit(xt_, yt_)
 				tempred = clf.predict(dataMatrix2[year][attributeDict2[att]])
 				tempsum = tempsum+tempred
@@ -288,6 +261,11 @@ class RegressionModel(object):
 		dataMatrix2, colDictionary2, attributeDict2 = db.fetchCountryData(
 		self.country, (2001, 2014), useCountryCode=False, asNumpyMatrix = False)
 
+		try:
+			clean.transformColumns(dataMatrix2, clean.smoothByAverage)
+		except ValueError:
+			clean.transformColumns(dataMatrix2, clean.smoothByReplacement(0))
+
 
 		"""Initialize, fill, and convert target data for training"""
 		yt_ = [] #un-numpified training data for y
@@ -298,26 +276,35 @@ class RegressionModel(object):
 
 		yp_ = yt_
 
-		for year in range(0, len(dataMatrix2)):
-			tempsum = 0
-			for att in attributes:
-				xt_ = [] #un-numpified training data for x
-				for year2 in range(0, len(dataMatrix)):
-					temp = dataMatrix[year2][attributeDict[att]]
-					xt_.append(temp)
+		predicted_values = []
 
-				xt_ = np.asarray(xt_) #numpify training data for x
-				#print xt_
-				xt_ = np.reshape(xt_,(41,1))
+		for att in attributes:
+			xt_ = []
+			for year in range(0, len(dataMatrix)):
+				temp = dataMatrix[year][attributeDict[att]]
+				xt_.append(temp)
 
-				llf = linear_model.LogisticRegression(penalty = 'l2')
-				
-				llf.fit(xt_, yt_.astype(int))
-				tempred = llf.predict(dataMatrix2[year][attributeDict2[att]])
-				#print tempred
-				tempsum = tempsum+tempred
-			tempval = tempsum/len(attributes)
-			yp_ = np.append(yp_,tempval)
+			xt_ = np.asarray(xt_)
+
+			xt_ = np.reshape(xt_,(41,1))
+
+			llf = linear_model.LogisticRegression(penalty = 'l2')
+			llf.fit_transform(xt_,yt_.astype(int))
+
+			temparray = []
+
+			for year2 in range(0,len(dataMatrix2)):
+				tempval = llf.predict(dataMatrix2[year2][attributeDict2[att]])
+				temparray.append(tempval)
+
+			predicted_values.append(temparray)
+
+		for num in range(0,len(predicted_values[0])):
+			sum1 = 0
+			for num2 in range(0,len(predicted_values)):
+				sum1 = sum1 + predicted_values[num2][num]
+			temp = sum1/len(predicted_values)
+			yp_=np.append(yp_,temp)
 
 		x_ = []
 		for year in range(1960, 2015):
@@ -327,6 +314,10 @@ class RegressionModel(object):
 		logdict = {}
 		for num in range(0, len(x_)):
 			logdict[x_[num]] = yp_[num]
+
+		for key, value in logdict.items():
+			if(math.isnan(value)):
+				del(logdict[key])
 
 		return logdict
 
@@ -345,11 +336,11 @@ if __name__ == "__main__":
 	pack = model.packRegs(['EG.ELC.PETR.ZS','EN.URB.MCTY.TL.ZS'])
 	#print pack
 	actual = model.actual()
-	poly1 = model.polynomial(1, ['EG.ELC.PETR.ZS','EN.URB.MCTY.TL.ZS'])
-	poly2 = model.polynomial(2, ['EG.ELC.PETR.ZS','EN.URB.MCTY.TL.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	poly1 = model.polynomial(1, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	poly2 = model.polynomial(2, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
 	# # poly2 = model.polynomial(2, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
 	# # poly3 = model.polynomial(5, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
-	#ridge = model.ridge(['EG.ELC.PETR.ZS','EN.URB.MCTY.TL.ZS'])
+	ridge = model.ridge(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
 	#log = model.log(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
 	#print log
 	# #print log
@@ -377,13 +368,12 @@ if __name__ == "__main__":
 	# 	px3.append(key)
 	# 	py3.append(value)
 	# plot(px3,py3,'y-')
-	# lx = []
-	# ly = []
-	# for key, value in log.items():
-	# 	lx.append(key)
-	# 	ly.append(value)
-	# plot(lx,ly,'bo')
-	# show()
+	lx = []
+	ly = []
+	for key, value in ridge.items():
+		lx.append(key)
+		ly.append(value)
+	plot(lx,ly,'bo')
 	if (actual != 0):
 		ax = []
 		ay = []
