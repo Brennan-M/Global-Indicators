@@ -67,8 +67,13 @@
   		</style>
 	</head>
 	<body>
-		<h1 align="center" id="info"></h1> 
-		<div id="graph" class="aGraph" style="position:absolute;top:0px;left:0; float:left;">
+		<h1 align="center" id="info"></h1>
+		<div style="margin-left:50px;">
+			<h3 align="left">Predicting On...</h3>
+			<ul id="listOfIndicators">
+			</ul>
+		</div>
+		<div id="graph" class="aGraph" style="top:0px;left:0; float:left;">
 		<script src="https://d3js.org/d3.v3.min.js"></script>
 		
 		<script>
@@ -76,8 +81,20 @@
 		actualdata = {{ actualdata|safe }};
 		ridgedata = {{ ridgedata|safe }};
 		poly2data = {{ poly2data|safe }};
+		regressionInfo = {{ regressionInfo|safe }};
+		indicatorData = {{ indicatorData|safe }};
+
+		console.log(regressionInfo)
 
 
+		document.getElementById("info").innerHTML = indicatorData[regressionInfo["modeling"]]
+		var attributeList = document.getElementById("listOfIndicators");
+
+		for (var i = 0; i < regressionInfo['predictionAttributes'].length; i++) {
+			var entry = document.createElement('li');
+			entry.appendChild(document.createTextNode(indicatorData[regressionInfo['predictionAttributes'][i]]));
+			attributeList.appendChild(entry);
+		}
 
 		var actualkeys = Object.keys(actualdata)
 		var actualvalues = []
@@ -109,9 +126,9 @@
 		min = Math.min(ridgeMin, actualMin, poly2Min);
 
 		// define dimensions of graph
-		var m = [100, 30, 30, 200]; // margins
+		var m = [10, 30, 30, 200]; // margins
 		var w = 1500 - m[1] - m[3]; // width
-		var h = 900 - m[0] - m[2]; // height
+		var h = 800 - m[0] - m[2]; // height
 		
 		// create a simple data array that we'll plot with a line (this array represents only the Y values, X will just be the index location)
  
@@ -141,7 +158,9 @@
 				// return the Y coordinate where we want to plot this datapoint
 				console.log(y(d))
 				return y(d); 
-			});
+			})
+			.interpolate("monotone");
+			//.interpolate("linear");
  
  
 

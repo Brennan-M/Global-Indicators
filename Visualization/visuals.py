@@ -56,7 +56,7 @@ def index():
 		elif clusterForm.validate() and request.form['cluster'] == 'Cluster':
 			return cluster_view(request.form['attributes'], request.form['kvalue'], request.form['clusterTechnique'], request.form['year'], rd.indicatorData)
 		elif regressionForm.validate() and request.form['regression'] == 'Regression':
-			return regression_view(request.form['regressionAttribute'], request.form['country'], request.form['predictingAttributes'])
+			return regression_view(request.form['regressionAttribute'], request.form['country'], request.form['predictingAttributes'], rd.indicatorData)
 		else:
 			return render_template('index.html', form4 = regressionForm, form3 = clusterForm, form2 = cForm, form = mmForm, data=json.dumps(rd.indicatorData), countries=json.dumps(rd.countryData))
 	elif request.method == 'GET':
@@ -64,7 +64,7 @@ def index():
 
 
 @app.route("/regression", methods=["GET", "POST"])
-def regression_view(attributeToModel, country, predictionAttributes):
+def regression_view(attributeToModel, country, predictionAttributes, indicatorData):
 	# Michael, You should use the attributes passed in here
 	# as the parameters to your regression class
 
@@ -75,6 +75,8 @@ def regression_view(attributeToModel, country, predictionAttributes):
 	predictionAttributes = predictionAttributes.split(",")
 	predictionAttributes = [x.strip() for x in predictionAttributes]
 
+	regressionInfo = {"modeling" : attributeToModel,
+					  "predictionAttributes" : predictionAttributes }
 	print attributeToModel
 	print country
 	#print predictionAttributes
@@ -83,7 +85,8 @@ def regression_view(attributeToModel, country, predictionAttributes):
 	print predictionAttributes
 
 	model = RegressionModel(attributeToModel, country)
-	ridgedata = model.polynomial(1, predictionAttributes)
+	# ridgedata = model.ridge(predictionAttributes)
+	# print ridgedata
 	poly2data = model.polynomial(2, predictionAttributes)
 	actualdata = model.actual()
 
@@ -92,7 +95,7 @@ def regression_view(attributeToModel, country, predictionAttributes):
 
 	# When it is in dictonary form, you can pass it to the html
 	# using json.dumps(YOUR DATA), see examples below
-	return render_template("regression.html", actualdata=json.dumps(actualdata), ridgedata=json.dumps(ridgedata), poly2data=json.dumps(poly2data))
+	return render_template("regression.html", regressionInfo=json.dumps(regressionInfo), indicatorData=json.dumps(indicatorData), actualdata=json.dumps(actualdata), ridgedata=json.dumps(actualdata), poly2data=json.dumps(poly2data))
 
 
 @app.route("/cluster", methods=["GET", "POST"])
