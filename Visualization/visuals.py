@@ -105,7 +105,8 @@ def cluster_view(attributes, kvalue, clusterTechnique, year, indicatorData):
 	cluster.clusterData["year"] = year
 	cluster.clusterData["kvalue"] = kvalue
 	cluster.clusterData["clusterTechnique"] = clusterTechnique
-	return render_template("cluster.html", indicatorData=json.dumps(indicatorData), clusterData=json.dumps(cluster.clusterData))
+
+	return render_template("cluster.html", countryData=json.dumps(cluster.countryVals), indicatorData=json.dumps(indicatorData), clusterData=json.dumps(cluster.clusterData))
 
 
 @app.route("/correlations", methods=["GET", "POST"])

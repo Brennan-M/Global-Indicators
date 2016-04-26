@@ -30,7 +30,7 @@ class Cluster(object):
 
 		self.clusterData = {} # In format { Year: {country:value, country:value, etc}, Year: ... }
 			# This is the dictionary needed for visuals
-
+		self.countryVals = {}
 		self.getData()
 		if (clusterTechnique == "spectral"):
 			self.spectral()
@@ -43,6 +43,17 @@ class Cluster(object):
 		self.values, self.countries, self.col = db.fetchAttributesData(self.attributes,self.year)
 
 		matrix_cleaning.transformColumns(self.values, matrix_cleaning.smoothByAverage)
+
+		for i in self.countries.keys():
+			ccode = self.countries[i]
+		 	attrDict = {}
+		 	for j in self.col.keys():
+				attr = self.col[j]
+				attrDict[attr] = self.values[i, j]
+
+			self.countryVals.update({ccode : attrDict})
+		
+		#print self.countryVals
 
 
 		# No Need to normalize I dont think?

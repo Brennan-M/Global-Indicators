@@ -13,6 +13,7 @@ class RetrieveData(object):
 
 		self.indicatorData = {}
 		self.countryData = {}
+		self.attributeValues = {}
 
 	def __del__(self):
 		self.conn.close()
@@ -34,6 +35,17 @@ class RetrieveData(object):
 	def getCountries(self):
 		for row in self.c.execute("SELECT DISTINCT CountryCode, TableName FROM Country"):
 			self.countryData[row[0]] = row[1]
+
+	def getCountryValues(self, attributes, year):
+		# I need this as { ccode1: {attr1:value, attr2:value}, ccode2:{}}
+		for ccode in self.countryData.keys():
+			attrDict = {}
+			for attr in attributes:
+				for val in self.c.execute("SELECT Value FROM Indicators WHERE IndicatorCode= ? and CountryCode= ? and Year= ?", (attr, ccode, year)):
+					print val
+		#rd.attributeValues
+
+
 
 '''
 if __name__ ==  "__main__":
