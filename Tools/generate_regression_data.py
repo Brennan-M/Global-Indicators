@@ -331,13 +331,12 @@ class RegressionModel(object):
 		return logdict
 
 	def packRegs(self, predictors):
-		cleanatts = cleanAttributes(predictors)
+		cleanatts = self.cleanAttributes(predictors)
 		act = self.actual()
 		poly2 = self.polynomial(2,cleanatts)
-		poly3 = self.polynomial(3,cleanatts)
-		rid = self.ridge(attributes)
+		rid = self.ridge(cleanatts)
 
-		return cleanatts,act,poly2,poly3,rid
+		return cleanatts,act,poly2,rid
 
 
 

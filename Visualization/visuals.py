@@ -65,8 +65,6 @@ def index():
 
 @app.route("/regression", methods=["GET", "POST"])
 def regression_view(attributeToModel, country, predictionAttributes, indicatorData):
-	# Michael, You should use the attributes passed in here
-	# as the parameters to your regression class
 
 	# predictionAttributes when passed in is a comma separated string
 	# so I convert it to a python array so it is easy for you to use.
@@ -75,14 +73,14 @@ def regression_view(attributeToModel, country, predictionAttributes, indicatorDa
 	predictionAttributes = predictionAttributes.split(",")
 	predictionAttributes = [x.strip() for x in predictionAttributes]
 
-	regressionInfo = {"modeling" : attributeToModel,
-					  "predictionAttributes" : predictionAttributes }
-
 	attributeToModel = attributeToModel.encode('UTF8')
 	predictionAttributes = [x.encode('UTF8') for x in predictionAttributes]
 
 	model = RegressionModel(attributeToModel, country)
-	actualdata, poly2data, ridgedata = model.packRegs(predictionAttributes)
+	predictionAttributes, actualdata, poly2data, ridgedata = model.packRegs(predictionAttributes)
+
+	regressionInfo = {"modeling" : attributeToModel,
+					  "predictionAttributes" : predictionAttributes }
 
 	return render_template("regression.html", regressionInfo=json.dumps(regressionInfo), indicatorData=json.dumps(indicatorData), actualdata=json.dumps(actualdata), ridgedata=json.dumps(ridgedata), poly2data=json.dumps(poly2data))#, poly3data=json.dumps(poly3data))
 
