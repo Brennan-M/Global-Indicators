@@ -70,9 +70,21 @@
 	</head>
 	<body>
 		<h1 align="center" id="info"></h1>
-		<div style="margin-left:50px;">
+		<!-- <div style="margin-left:50px;">
+			<ul style="float:right">
+				<li style="color:red">Ridge</li>
+				<li style="color:blue">2nd Degree Polynomial</li>
+				<li style="color:black">Actual</li>
+			</ul>
+		</div> -->
+		<div style="margin-left:50px; margin-right:200px">
 			<h3 align="left">Predicting On...</h3>
-			<ul id="listOfIndicators">
+			<ul style="float:left" id="listOfIndicators">
+			</ul>
+			<ul style="float:right">
+				<li style="color:red">Ridge</li>
+				<li style="color:blue">2nd Degree Polynomial</li>
+				<li style="color:black">Actual</li>
 			</ul>
 		</div>
 		<div id="graph" class="aGraph" style="top:0px;left:0; float:left;">
@@ -199,7 +211,7 @@
 			// Add the line by appending an svg:path element with the data line we created above
 		// do this AFTER the axes above so that the line is above the tick-lines
 		graph.append("svg:path").attr("d", line(ridgevalues)).style("stroke", "#FF0000");
-		graph.append("svg:path").attr("d", line(poly2values)).style("stroke", "#00FF00");
+		graph.append("svg:path").attr("d", line(poly2values)).style("stroke", "#0000FF");
 		//graph.append("svg:path").attr("d", line(poly3values)).style("stroke", "#0000FF");
 		graph.append("svg:path").attr("d", line(actualvalues)).style("stroke", "#000000");
 			
