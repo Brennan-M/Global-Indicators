@@ -337,7 +337,7 @@ class RegressionModel(object):
 		poly3 = self.polynomial(3,cleanatts)
 		rid = self.ridge(attributes)
 
-		return act,poly2,poly3,rid
+		return cleanatts,act,poly2,poly3,rid
 
 
 
