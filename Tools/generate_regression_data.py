@@ -204,6 +204,11 @@ class RegressionModel(object):
 		dataMatrix2, colDictionary2, attributeDict2 = db.fetchCountryData(
 		self.country, (2001, 2014), useCountryCode=False, asNumpyMatrix = False)
 
+		try:
+			clean.transformColumns(dataMatrix2, clean.smoothByAverage)
+		except ValueError:
+			clean.transformColumns(dataMatrix2, clean.smoothByReplacement(0))
+
 
 		"""Initialize, fill, and convert target data for training"""
 		yt_ = [] #un-numpified training data for y
@@ -311,30 +316,38 @@ class RegressionModel(object):
 
 		return logdict
 
+	def packRegs(self, predictors):
+		act = self.actual()
+		poly2 = self.polynomial(2,predictors)
+		poly3 = self.polynomial(3,predictors)
+		rid = self.ridge(predictors)
+
+		return act,poly2,poly3,rid
 
 
 
 if __name__ == "__main__":
 	model = RegressionModel("NY.GDP.MKTP.KD", "United States")
-	actual = model.actual()
-	poly1 = model.polynomial(2, ['EG.ELC.PETR.ZS','EN.URB.MCTY.TL.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
-	# poly2 = model.polynomial(2, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
-	# poly3 = model.polynomial(5, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
-	ridge = model.ridge(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
-	#log = model.log(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
-	print poly1
-	print ridge
-	print actual
-	#print log
-	if(poly1 != 0):
-		px1 = []
-		py1 = []
-		for key, value in poly1.items():
-			px1.append(key)
-			py1.append(value)
-		plot(px1,py1,'r-')
-	else:
-		print "Not a valid attribute"
+	pack = model.packRegs(['EG.ELC.PETR.ZS','EN.URB.MCTY.TL.ZS'])
+	print pack
+	# actual = model.actual()
+	# poly1 = model.polynomial(1, ['EG.ELC.PETR.ZS','EN.URB.MCTY.TL.ZS'])
+	# poly2 = model.polynomial(2, ['EG.ELC.PETR.ZS','EN.URB.MCTY.TL.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	# # poly2 = model.polynomial(2, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	# # poly3 = model.polynomial(5, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	# ridge = model.ridge(['EG.ELC.PETR.ZS','EN.URB.MCTY.TL.ZS'])
+	# #log = model.log(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	
+	# #print log
+	# if(poly1 != 0):
+	# 	px1 = []
+	# 	py1 = []
+	# 	for key, value in poly1.items():
+	# 		px1.append(key)
+	# 		py1.append(value)
+	# 	plot(px1,py1,'r-')
+	# else:
+	# 	print "Not a valid attribute"
 	# if(poly2 != 0):
 	# 	px2 = []
 	# 	py2 = []
@@ -350,19 +363,19 @@ if __name__ == "__main__":
 	# 	px3.append(key)
 	# 	py3.append(value)
 	# plot(px3,py3,'y-')
-	rx = []
-	ry = []
-	for key, value in ridge.items():
-		rx.append(key)
-		ry.append(value)
-	plot(rx,ry,'bo')
-	if (actual != 0):
-		ax = []
-		ay = []
-		for key, value in actual.items():
-			ax.append(key)
-			ay.append(value)
-		plot(ax,ay,'g-')
-		show()
-	else:
-		print "Invalid target Attribute"
+	# rx = []
+	# ry = []
+	# for key, value in ridge.items():
+	# 	rx.append(key)
+	# 	ry.append(value)
+	# plot(rx,ry,'bo')
+	# if (actual != 0):
+	# 	ax = []
+	# 	ay = []
+	# 	for key, value in actual.items():
+	# 		ax.append(key)
+	# 		ay.append(value)
+	# 	plot(ax,ay,'g-')
+	# 	show()
+	# else:
+	# 	print "Invalid target Attribute"
