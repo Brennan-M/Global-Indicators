@@ -204,26 +204,27 @@ class RegressionModel(object):
 
 		yt_ = np.asarray(yt_) #numpify target training data
 
-		yp_ = yt_
-
-		for year in range(0, len(dataMatrix2)):
-			tempsum = 0
+		xt_ = []
+		for year in range(0, len(dataMatrix)):
+			temparray = []
 			for att in attributes:
-				xt = [] #un-numpified training data for x
-				for year2 in range(0, len(dataMatrix)):
-					temp = dataMatrix[year2][attributeDict[att]]
-					xt.append(temp)
+				temparray.append(dataMatrix[year][attributeDict[att]])
+			xt_.append(temparray)
 
-				xt_ = np.asarray(xt) #numpify training data for x
+		xt_ = np.asarray(xt_)
+		#xt_ = np.reshape(41, len(attributes))
 
-				xt_ = np.reshape(xt_,(41,1))
+		clf = linear_model.Ridge(alpha = 1e-06)
+		clf.fit(xt_,yt_.astype(int))
 
-				clf = linear_model.Ridge(alpha = 0)
-				clf.fit(xt_, yt_)
-				tempred = clf.predict(dataMatrix2[year][attributeDict2[att]])
-				tempsum = tempsum+tempred
-			tempval = tempsum/len(attributes)
-			yp_ = np.append(yp_,tempval)
+
+		for year in range(0,len(dataMatrix2)):
+			temparray = []
+			for att in attributes:
+				temparray = np.append(temparray,(dataMatrix2[year][attributeDict2[att]]))
+			temparray2 = np.reshape(temparray, (1,-1))
+		 	tempval = clf.predict(temparray2)
+		 	yt_ = np.append(yt_, tempval)
 
 		x_ = []
 		for year in range(1960, 2015):
@@ -232,7 +233,7 @@ class RegressionModel(object):
 
 		ridgedict = {}
 		for num in range(0, len(x_)):
-			ridgedict[x_[num]] = yp_[num]
+			ridgedict[x_[num]] = yt_[num]
 
 		for key, value in ridgedict.items():
 			if(math.isnan(value)):
@@ -276,37 +277,27 @@ class RegressionModel(object):
 
 		yt_ = np.asarray(yt_) #numpify target training data
 
-		yp_ = yt_
-
-		predicted_values = []
-
-		for att in attributes:
-			xt_ = []
-			for year in range(0, len(dataMatrix)):
-				temp = dataMatrix[year][attributeDict[att]]
-				xt_.append(temp)
-
-			xt_ = np.asarray(xt_)
-
-			xt_ = np.reshape(xt_,(41,1))
-
-			llf = linear_model.LogisticRegression(penalty = 'l2')
-			llf.fit_transform(xt_,yt_.astype(int))
-
+		xt_ = []
+		for year in range(0, len(dataMatrix)):
 			temparray = []
+			for att in attributes:
+				temparray.append(dataMatrix[year][attributeDict[att]])
+			xt_.append(temparray)
 
-			for year2 in range(0,len(dataMatrix2)):
-				tempval = llf.predict(dataMatrix2[year2][attributeDict2[att]])
-				temparray.append(tempval)
+		xt_ = np.asarray(xt_)
+		#xt_ = np.reshape(41, len(attributes))
 
-			predicted_values.append(temparray)
+		llf = linear_model.LogisticRegression(penalty='l1')
+		llf.fit(xt_,yt_.astype(int))
 
-		for num in range(0,len(predicted_values[0])):
-			sum1 = 0
-			for num2 in range(0,len(predicted_values)):
-				sum1 = sum1 + predicted_values[num2][num]
-			temp = sum1/len(predicted_values)
-			yp_=np.append(yp_,temp)
+
+		for year in range(0,len(dataMatrix2)):
+			temparray = []
+			for att in attributes:
+				temparray = np.append(temparray,(dataMatrix2[year][attributeDict2[att]]))
+			temparray2 = np.reshape(temparray, (1,-1))
+		 	tempval = llf.predict(temparray2)
+		 	yt_ = np.append(yt_, tempval)
 
 		x_ = []
 		for year in range(1960, 2015):
@@ -315,7 +306,7 @@ class RegressionModel(object):
 
 		logdict = {}
 		for num in range(0, len(x_)):
-			logdict[x_[num]] = yp_[num]
+			logdict[x_[num]] = yt_[num]
 
 		for key, value in logdict.items():
 			if(math.isnan(value)):
@@ -326,24 +317,25 @@ class RegressionModel(object):
 	def packRegs(self, predictors):
 		cleanatts = self.cleanAttributes(predictors)
 		act = self.actual()
+		poly1 = self.polynomial(1,cleanatts)
 		poly2 = self.polynomial(2,cleanatts)
 		rid = self.ridge(cleanatts)
 
-		return cleanatts,act,poly2,rid
+		return cleanatts,act,poly1,poly2,rid
 
 
 
 if __name__ == "__main__":
-	model = RegressionModel("NY.GDP.MKTP.KD", "United States")
+	model = RegressionModel("NE.EXP.GNFS.ZS", "United States")
 	pack = model.packRegs(['EG.ELC.PETR.ZS','EN.URB.MCTY.TL.ZS'])
 	#print pack
 	actual = model.actual()
-	poly1 = model.polynomial(1, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
-	poly2 = model.polynomial(2, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	poly1 = model.polynomial(1, ['SP.DYN.TO65.FE.ZS','NE.CON.GOVT.ZS','NE.GDI.TOTL.CD','IP.PAT.RESD'])
+	#poly2 = model.polynomial(2, ['EN.URB.MCTY.TL.ZS', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS']) #, 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
 	# # poly2 = model.polynomial(2, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
 	# # poly3 = model.polynomial(5, ['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
-	ridge = model.ridge(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
-	#log = model.log(['EN.URB.MCTY.TL.ZS', 'NY.GDP.MKTP.CD', 'EN.URB.MCTY', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS'])
+	ridge = model.ridge(['SP.DYN.TO65.FE.ZS','NE.CON.GOVT.ZS','NE.GDI.TOTL.CD','IP.PAT.RESD'])
+	log = model.log(['SP.DYN.TO65.FE.ZS','NE.CON.GOVT.ZS','NE.GDI.TOTL.CD','IP.PAT.RESD'])
 	#print log
 	# #print log
 	if(poly1 != 0):
@@ -353,29 +345,35 @@ if __name__ == "__main__":
 			px1.append(key)
 			py1.append(value)
 		plot(px1,py1,'r-')
-	else:
-		print "Not a valid attribute"
-	if(poly2 != 0):
-		px2 = []
-		py2 = []
-		for key, value in poly2.items():
-			px2.append(key)
-			py2.append(value)
-		plot(px2,py2,'b-')
-	else:
-		print "Not a valid attribute"
-	# px3 = []
-	# py3 = []
-	# for key, value in poly3.items():
-	# 	px3.append(key)
-	# 	py3.append(value)
-	# plot(px3,py3,'y-')
+	# else:
+	# 	print "Not a valid attribute"
+	# if(poly2 != 0):
+	# 	px2 = []
+	# 	py2 = []
+	# 	for key, value in poly2.items():
+	# 		px2.append(key)
+	# 		py2.append(value)
+	# 	plot(px2,py2,'b-')
+	# else:
+	# 	print "Not a valid attribute"
+	px3 = []
+	py3 = []
+	for key, value in ridge.items():
+		px3.append(key)
+		py3.append(value)
+	plot(px3,py3,'y-')
 	lx = []
 	ly = []
-	for key, value in ridge.items():
+	for key, value in log.items():
 		lx.append(key)
 		ly.append(value)
-	plot(lx,ly,'bo')
+	plot(lx,ly,'b-')
+	# lax = []
+	# lay = []
+	# for key, value in lasso.items():
+	# 	lax.append(key)
+	# 	lay.append(value)
+	# plot(lax,lay,'go')
 	if (actual != 0):
 		ax = []
 		ay = []

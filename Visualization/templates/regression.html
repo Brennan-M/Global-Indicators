@@ -83,7 +83,8 @@
 			</ul>
 			<ul style="float:right">
 				<li style="color:red">Ridge</li>
-				<li style="color:blue">2nd Degree Polynomial</li>
+				<li style="color:blue">Linear</li>
+				<li style="color:green">2nd Degree Polynomial</li>
 				<li style="color:black">Actual</li>
 			</ul>
 		</div>
@@ -94,6 +95,7 @@
 
 		actualdata = {{ actualdata|safe }};
 		ridgedata = {{ ridgedata|safe }};
+		poly1data = {{poly1data|safe }}
 		poly2data = {{ poly2data|safe }};
 		// poly3data = {{ poly3data|safe }};
 		regressionInfo = {{ regressionInfo|safe }};
@@ -128,6 +130,12 @@
 			poly2values.push(poly2data[poly2keys[i]])
 		}
 
+		var poly1keys = Object.keys(poly1data)
+		var poly1values = []
+		for (var i = 0; i < poly1keys.length; i++) {
+			poly1values.push(poly1data[poly1keys[i]])
+		}
+
 		// var poly3keys = Object.keys(poly3data)
 		// var poly3values = []
 		// for (var i = 0; i < poly3keys.length; i++) {
@@ -142,10 +150,12 @@
 		actualMin = Math.min.apply(null, actualvalues);
 		poly2Max = Math.max.apply(null, poly2values);
 		poly2Min = Math.min.apply(null, poly2values);
+		poly1Max = Math.max.apply(null, poly1values);
+		poly1Min = Math.min.apply(null, poly1values);
 		// poly3Max = Math.max.apply(null, poly3values);
 		// poly3Min = Math.min.apply(null, poly3values);
-		max = Math.max(ridgeMax, actualMax, poly2Max);//, poly3Max);
-		min = Math.min(ridgeMin, actualMin, poly2Min);//, poly3Min);
+		max = Math.max(ridgeMax, actualMax, poly2Max, poly1Max);//, poly3Max);
+		min = Math.min(ridgeMin, actualMin, poly2Min, poly1Min);//, poly3Min);
 
 		// define dimensions of graph
 		var m = [10, 30, 30, 200]; // margins
@@ -211,8 +221,8 @@
 			// Add the line by appending an svg:path element with the data line we created above
 		// do this AFTER the axes above so that the line is above the tick-lines
 		graph.append("svg:path").attr("d", line(ridgevalues)).style("stroke", "#FF0000");
-		graph.append("svg:path").attr("d", line(poly2values)).style("stroke", "#0000FF");
-		//graph.append("svg:path").attr("d", line(poly3values)).style("stroke", "#0000FF");
+		graph.append("svg:path").attr("d", line(poly2values)).style("stroke", "#00FF00");
+		graph.append("svg:path").attr("d", line(poly1values)).style("stroke", "#0000FF");
 		graph.append("svg:path").attr("d", line(actualvalues)).style("stroke", "#000000");
 			
     	</script>

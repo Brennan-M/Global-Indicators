@@ -77,12 +77,12 @@ def regression_view(attributeToModel, country, predictionAttributes, indicatorDa
 	predictionAttributes = [x.encode('UTF8') for x in predictionAttributes]
 
 	model = RegressionModel(attributeToModel, country)
-	predictionAttributes, actualdata, poly2data, ridgedata = model.packRegs(predictionAttributes)
+	predictionAttributes, actualdata, poly1data, poly2data, ridgedata = model.packRegs(predictionAttributes)
 
 	regressionInfo = {"modeling" : attributeToModel,
 					  "predictionAttributes" : predictionAttributes }
 
-	return render_template("regression.html", regressionInfo=json.dumps(regressionInfo), indicatorData=json.dumps(indicatorData), actualdata=json.dumps(actualdata), ridgedata=json.dumps(ridgedata), poly2data=json.dumps(poly2data))#, poly3data=json.dumps(poly3data))
+	return render_template("regression.html", regressionInfo=json.dumps(regressionInfo), indicatorData=json.dumps(indicatorData), actualdata=json.dumps(actualdata), ridgedata=json.dumps(ridgedata), poly2data=json.dumps(poly2data), poly1data=json.dumps(poly1data))
 
 
 @app.route("/cluster", methods=["GET", "POST"])
