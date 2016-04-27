@@ -4,13 +4,14 @@
 View a demo of the final tool here: https://www.youtube.com/watch?v=-CqND90YeVc
 
 To run the tool on your localhost:
+
   Install the following libraries: (These tools can all be installed with pip install)
-    - numpy
-    - scipy
-    - scikit-learn
-    - Flask
+  * numpy
+  * scipy
+  * scikit-learn
+  * Flask
   
-  Download the World-Development-Indicators dataset obtained at http://databank.worldbank.org/data/home.aspx, and extract it inside of the Data Folder of this repository.
+  Download the World-Development-Indicators dataset obtained at https://www.kaggle.com/worldbank/world-development-indicators, and extract it inside of the Data folder of this repository.
   
   run python Visualizations/visuals.py to start the localhost server.
   
