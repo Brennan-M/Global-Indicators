@@ -272,6 +272,7 @@ class RegressionModel(object):
 
 		"""Initialize, fill, and convert target data for training"""
 		yt_ = [] #un-numpified training data for y
+		
 		for year in range(0, len(dataMatrix)):
 			yt_.append(dataMatrix[year][attributeDict[self.attribute]])
 
@@ -287,7 +288,7 @@ class RegressionModel(object):
 		xt_ = np.asarray(xt_)
 		#xt_ = np.reshape(41, len(attributes))
 
-		llf = linear_model.LogisticRegression(penalty='l1')
+		llf = linear_model.LogisticRegression(penalty='l2', dual=False, tol=0.0001, C=1.0, fit_intercept=True, intercept_scaling=1, class_weight=None, random_state=None, solver='newton-cg', max_iter=300, multi_class='multinomial', verbose=0, warm_start=False, n_jobs=1)
 		llf.fit(xt_,yt_.astype(int))
 
 
