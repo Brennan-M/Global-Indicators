@@ -12,7 +12,7 @@
 	  		/* tell the SVG path to be a thin blue line without any area fill */
 	  		path {
 	  			stroke: steelblue;
-	  			stroke-width: 2;
+	  			stroke-width: 3;
 	  			fill: none;
 	  		}
 	  		
@@ -221,7 +221,7 @@
 			// Add the line by appending an svg:path element with the data line we created above
 		// do this AFTER the axes above so that the line is above the tick-lines
 		graph.append("svg:path").attr("d", line(ridgevalues)).style("stroke", "#FF0000");
-		graph.append("svg:path").attr("d", line(poly2values)).style("stroke", "#00FF00");
+		graph.append("svg:path").attr("d", line(poly2values)).style("stroke", "green");
 		graph.append("svg:path").attr("d", line(poly1values)).style("stroke", "#0000FF");
 		graph.append("svg:path").attr("d", line(actualvalues)).style("stroke", "#000000");
 			
